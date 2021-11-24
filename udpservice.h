@@ -9,7 +9,8 @@
 #include <unistd.h>
 #include <string.h>
 #include <thread>
-#define BUFLEN  512
+#include <mutex>
+#define BUFLEN 512
 
 namespace Ui
 {
@@ -44,6 +45,8 @@ private:
     int receiveNums(char*,int);
     void receiveData(char*,int,int&,char*);
     bool is_running;
+    bool is_sending;
+    void setIsSendingFalse();
 };
 
 #endif // UDPSERVICE_H

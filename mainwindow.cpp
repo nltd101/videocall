@@ -2,18 +2,13 @@
 #include "ui_mainwindow.h"
 
 void updateLabel(Ui::MainWindow *ui,char* data){
+    cout<<"receive: "<<strlen(data)<<endl;
+    QImage image = QImage((uchar*)data,400,225,QImage::Format_RGB32);
 
-//   QByteArray arr =  QByteArray::fromRawData(data,strlen(data));
-//            QPixmap pix;
-//    pix.loadFromData(arr,"JPG");
-    QImage image = QImage((uchar*)data,400,500,QImage::Format_RGB888);
-//    ui->partner_label->setPixmap(pix);
-   // ui->partner_label->setText(QString("%1").arg(strlen(data)));
-  QPixmap pm = QPixmap::fromImage(image);
-    ui->partner_label->setPixmap(pm.scaled(ui->partner_label->size(), Qt::KeepAspectRatio, Qt::SmoothTransformation));
+          QSize size= image.size();
 
-//    cout<<"length"<<strlen(data)<<endl;
-
+    QPixmap pm = QPixmap::fromImage(image);
+    ui->partner_label->setPixmap(pm);// pm.scaled(ui->partner_label->size(), Qt::KeepAspectRatio, Qt::SmoothTransformation));
 }
 using namespace std;
 MainWindow::MainWindow(QWidget *parent) :

@@ -17,6 +17,7 @@
 #include "udpservice.h"
 #include <QMessageBox>
 #include <QByteArray>
+#include <mutex>
 namespace Ui {
 class MainWindow;
 }
