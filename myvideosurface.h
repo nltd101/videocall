@@ -13,7 +13,9 @@
 #include <QList>
 #include <vector>
 #include <QObject>
-
+#include <QBuffer>
+#include "udpservice.h"
+#include "utils.h"
 QT_BEGIN_NAMESPACE
 namespace Ui
 {
@@ -29,11 +31,11 @@ class MyVideoSurface : public QAbstractVideoSurface
 private:
     Ui::MainWindow *ui;
     QCamera *camera;
-
+    UdpService* service;
 
 public:
-     int count=0;
-    MyVideoSurface(QObject *parent, Ui::MainWindow *ui, QCamera *camera);
+
+    MyVideoSurface(QObject *parent, Ui::MainWindow *ui, QCamera *camera, UdpService* service);
     virtual ~MyVideoSurface();
 
     QList<QVideoFrame::PixelFormat>

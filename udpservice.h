@@ -9,7 +9,7 @@
 #include <unistd.h>
 #include <string.h>
 #include <thread>
-#define BUFLEN 512
+#define BUFLEN  512
 
 namespace Ui
 {
@@ -32,14 +32,18 @@ public:
     void setPartnerAddress(char* ip, int port);
     int getMyPort();
     char* getMyIp();
-    void setUp();
+    void start();
     void openPortAndListen();
+    bool isRunning();
 private:
     socklen_t socket;
     struct sockaddr_in partner_address, my_address;
     socklen_t partner_addr_length, my_addr_length;
     thread * listenConnect;
     Ui::MainWindow *ui;
+    int receiveNums(char*,int);
+    void receiveData(char*,int,int&,char*);
+    bool is_running;
 };
 
 #endif // UDPSERVICE_H

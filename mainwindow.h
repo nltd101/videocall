@@ -16,6 +16,7 @@
 #include "myvideosurface.h"
 #include "udpservice.h"
 #include <QMessageBox>
+#include <QByteArray>
 namespace Ui {
 class MainWindow;
 }
@@ -47,7 +48,7 @@ private:
     QCamera *camera;
     MyVideoSurface *surface;
     UdpService *udpservice;
-
+    void sendData(char* buf);
 };
 
 #endif // MAINWINDOW_H

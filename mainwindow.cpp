@@ -2,7 +2,17 @@
 #include "ui_mainwindow.h"
 
 void updateLabel(Ui::MainWindow *ui,char* data){
-    ui->partner_label->setText(QString(data));
+
+//   QByteArray arr =  QByteArray::fromRawData(data,strlen(data));
+//            QPixmap pix;
+//    pix.loadFromData(arr,"JPG");
+    QImage image = QImage((uchar*)data,400,500,QImage::Format_RGB888);
+//    ui->partner_label->setPixmap(pix);
+   // ui->partner_label->setText(QString("%1").arg(strlen(data)));
+  QPixmap pm = QPixmap::fromImage(image);
+    ui->partner_label->setPixmap(pm.scaled(ui->partner_label->size(), Qt::KeepAspectRatio, Qt::SmoothTransformation));
+
+//    cout<<"length"<<strlen(data)<<endl;
 
 }
 using namespace std;
@@ -12,6 +22,7 @@ MainWindow::MainWindow(QWidget *parent) :
 {
         ui->setupUi(this);
         setAcceptDrops(true);
+          udpservice = new UdpService(ui);
         camera = NULL;
         QList<QCameraInfo> cameras = QCameraInfo::availableCameras();
         if (cameras.size() > 0)
@@ -22,7 +33,7 @@ MainWindow::MainWindow(QWidget *parent) :
                 qDebug() << cameraInfo.deviceName();
                 qDebug() << cameraInfo.description();
                 camera = new QCamera(cameraInfo);
-                surface = new MyVideoSurface(this, ui, camera);
+                surface = new MyVideoSurface(this, ui, camera,udpservice);
                 camera->setViewfinder(surface);
                 camera->start();
                 break;
@@ -31,10 +42,12 @@ MainWindow::MainWindow(QWidget *parent) :
         else {
             ui->label->setText("No camera");
         }
-        udpservice = new UdpService(ui);
+
         udpservice->onReceiver=updateLabel;
 }
-
+void MainWindow::sendData(char* buf){
+    this->udpservice->send(buf);
+}
 
 
 MainWindow::~MainWindow()
@@ -61,7 +74,8 @@ void MainWindow::on_startCallButton_clicked()
            udpservice->setPartnerAddress("0.0.0.0",n);
      }
 
-    udpservice->setUp();
+    udpservice->start();
+
     int myport=udpservice->getMyPort();
     ui->startCallButton->setText(QString("Your port is %1").arg(myport));
     ui->startCallButton->setEnabled(false);
