@@ -1,5 +1,20 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
+#ifndef WIDTH
+#define WIDTH 300
+
+#endif
+#ifndef HEIGHT
+#define HEIGHT 200
+
+#endif
+#define DEBUG_MODE true
+#define mdebug(x) do { \
+  if (DEBUG_MODE) { std::cerr << x << std::endl; } \
+} while (0)
+#define mlog(x) do { \
+  if (DEBUG_MODE) { std::cout << x << std::endl; } \
+} while (0)
 
 #include <QMainWindow>
 #include <QCamera>
@@ -21,17 +36,6 @@
 namespace Ui {
 class MainWindow;
 }
-class QCamera;
-class QCameraViewfinder;
-class QCameraImageCapture;
-class QVBoxLayout;
-class QMenu;
-class QAction;
-class QAbstractVideoSurface;
-class QVideoFrame;
-class QAbstractVideoBuffer;
-class QMediaPlayer;
-
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
@@ -43,6 +47,7 @@ public:
 
 private slots:
     void on_startCallButton_clicked();
+    void on_stopCallButton_clicked();
 
 private:
     Ui::MainWindow *ui;

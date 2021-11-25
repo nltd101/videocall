@@ -42,27 +42,22 @@ bool MyVideoSurface::present(const QVideoFrame &frame)
                          QVideoFrame::imageFormatFromPixelFormat(cloneFrame.pixelFormat()));
 
         QImage cp = img.copy();
-         cp=cp.scaled(400, 500, Qt::KeepAspectRatio);
+         cp=cp.scaled(WIDTH, HEIGHT, Qt::KeepAspectRatio);
 
         cloneFrame.unmap();
 
-        utils u;
-        //u.deepCopyImageData(cp);
         cp = cp.mirrored(true, false);
 
         char* data= (char*)cp.bits();
-//        QSize size= cp.size();
-
 
         if (this->service!=NULL&&this->service->isRunning()==true)
         {
-//             cout<<"send: "<<strlen(data)<<endl;
              this->service->send(data);
         }
-//        cout<<"length : "<<strlen(data)<<endl;
-        QImage q = QImage((uchar*)data,400,225,QImage::Format_RGB32);
+
+        QImage q = QImage((uchar*)data,WIDTH,HEIGHT,QImage::Format_RGB32);
         QPixmap pm = QPixmap::fromImage(q);
-        ui->label->setPixmap(pm);//.scaled(ui->label->size(), Qt::KeepAspectRatio, Qt::SmoothTransformation));
+        ui->label->setPixmap(pm.scaled(ui->label->size(), Qt::KeepAspectRatio, Qt::SmoothTransformation));
 
         return true;
     }

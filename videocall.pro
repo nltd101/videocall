@@ -27,14 +27,12 @@ SOURCES += \
         main.cpp \
         mainwindow.cpp \
     myvideosurface.cpp \
-    udpservice.cpp \
-    utils.cpp
+    udpservice.cpp
 
 HEADERS += \
         mainwindow.h \
     myvideosurface.h \
-    udpservice.h \
-    utils.h
+    udpservice.h
 
 FORMS += \
         mainwindow.ui

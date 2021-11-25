@@ -1,5 +1,13 @@
 #ifndef MYVIDEOSURFACE_H
 #define MYVIDEOSURFACE_H
+#ifndef WIDTH
+#define WIDTH 300
+
+#endif
+#ifndef HEIGHT
+#define HEIGHT 200
+
+#endif
 
 #include <QImage>
 #include <QPixmap>
@@ -33,6 +41,7 @@ private:
     QCamera *camera;
     UdpService* service;
 
+
 public:
 
     MyVideoSurface(QObject *parent, Ui::MainWindow *ui, QCamera *camera, UdpService* service);
@@ -42,5 +51,8 @@ public:
     supportedPixelFormats(QAbstractVideoBuffer::HandleType type) const;
 
     bool present(const QVideoFrame &frame);
+
+private slots:
+    void on_stopCallButton_clicked();
 };
 #endif // MYVIDEOSURFACE_H

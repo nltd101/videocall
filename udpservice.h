@@ -1,7 +1,13 @@
 #ifndef UDPSERVICE_H
 #define UDPSERVICE_H
 
-
+#define DEBUG_MODE true
+#define mdebug(x) do { \
+  if (DEBUG_MODE) { std::cerr << x << std::endl; } \
+} while (0)
+#define mlog(x) do { \
+  if (DEBUG_MODE) { std::cout << x << std::endl; } \
+} while (0)
 #include <iostream>
 
 #include <arpa/inet.h>
@@ -10,7 +16,7 @@
 #include <string.h>
 #include <thread>
 #include <mutex>
-#define BUFLEN 512
+#define BUFLEN 64000
 
 namespace Ui
 {
@@ -34,13 +40,14 @@ public:
     int getMyPort();
     char* getMyIp();
     void start();
+    void stop();
     void openPortAndListen();
     bool isRunning();
 private:
     socklen_t socket;
     struct sockaddr_in partner_address, my_address;
     socklen_t partner_addr_length, my_addr_length;
-    thread * listenConnect;
+    thread * listenConnect=NULL;
     Ui::MainWindow *ui;
     int receiveNums(char*,int);
     void receiveData(char*,int,int&,char*);

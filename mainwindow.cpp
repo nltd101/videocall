@@ -3,21 +3,22 @@
 
 void updateLabel(Ui::MainWindow *ui,char* data){
     cout<<"receive: "<<strlen(data)<<endl;
-    QImage image = QImage((uchar*)data,400,225,QImage::Format_RGB32);
+    QImage image = QImage((uchar*)data,WIDTH,HEIGHT,QImage::Format_RGB32);
 
-          QSize size= image.size();
-
+        //  QSize size= image.size();
+    cout<<"receive: "<<strlen(data)<<endl;
     QPixmap pm = QPixmap::fromImage(image);
-    ui->partner_label->setPixmap(pm);// pm.scaled(ui->partner_label->size(), Qt::KeepAspectRatio, Qt::SmoothTransformation));
+    ui->partner_label->setPixmap( pm.scaled(ui->partner_label->size(), Qt::KeepAspectRatio, Qt::SmoothTransformation));
 }
 using namespace std;
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
 {
+
         ui->setupUi(this);
         setAcceptDrops(true);
-          udpservice = new UdpService(ui);
+        udpservice = new UdpService(ui);
         camera = NULL;
         QList<QCameraInfo> cameras = QCameraInfo::availableCameras();
         if (cameras.size() > 0)
@@ -39,9 +40,6 @@ MainWindow::MainWindow(QWidget *parent) :
         }
 
         udpservice->onReceiver=updateLabel;
-}
-void MainWindow::sendData(char* buf){
-    this->udpservice->send(buf);
 }
 
 
@@ -72,6 +70,13 @@ void MainWindow::on_startCallButton_clicked()
     udpservice->start();
 
     int myport=udpservice->getMyPort();
-    ui->startCallButton->setText(QString("Your port is %1").arg(myport));
+    ui->label_port->setText(QString("Your port is %1").arg(myport));
     ui->startCallButton->setEnabled(false);
+    ui->stopCallButton->setEnabled(true);
+}
+void MainWindow::on_stopCallButton_clicked(){
+    ui->label_port->setText(QString("Your port is 0"));
+    ui->startCallButton->setEnabled(true);
+    ui->stopCallButton->setEnabled(false);
+    this->udpservice->stop();
 }

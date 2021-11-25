@@ -1,24 +1,32 @@
 #include "udpservice.h"
-#include <chrono>
-#include <iostream>
+void UdpService::setIsSendingFalse()
+{
+    std::this_thread::sleep_for(std::chrono::seconds(3));
+    this->is_sending=false;
+}
+
+#include "udpservice.h"
+std::mutex mtx;
 void die(char* s)
 {
     perror(s);
     exit(1);
 }
-
 int UdpService::getMyPort() {
+
     return ntohs(this->my_address.sin_port);
 }
 char* UdpService::getMyIp() {
-    if (this->my_address.sin_port == 0) {
-        return NULL;
-    }
-    char myIP[16];
-    inet_ntop(AF_INET, &this->my_address.sin_addr, myIP, sizeof(myIP));
-    return myIP;
+    // if (this->my_address.sin_port == 0) {
+    //     return NULL;
+    // }
+    // char myIP[16];
+    // inet_ntop(AF_INET, &this->my_address.sin_addr, myIP, sizeof(myIP));
+    // return myIP;
+    return "s";
     // printf("local address: %sn", inet_ntoa( this->my_address.sin_addr));
 }
+
 void UdpService::openPortAndListen()
 {
     memset((char*)&this->my_address, 0, sizeof(this->my_address));
@@ -37,7 +45,7 @@ void UdpService::openPortAndListen()
     socklen_t len = sizeof(this->my_address);
     getsockname(this->socket, (struct sockaddr*)&this->my_address, &len);
 
-    printf("local port: %d", this->getMyPort());
+    cout << "local port: %d" << this->getMyPort() << endl;
     char buf[BUFLEN];
     //keep listening for data
     struct sockaddr_in sender_address;
@@ -45,7 +53,7 @@ void UdpService::openPortAndListen()
     char* receive_data = NULL;
     int full_receive_length = 0;
     int package_nums = 0;
-    // receive_data = new char[package_nums * BUFLEN + 1];
+    int count_test = 0;
     while (this->is_running)
     {
         // cout << "Waiting for data..." << endl;
@@ -63,7 +71,7 @@ void UdpService::openPortAndListen()
         // cout << ntohs(sender_address.sin_port) << endl;
         // cout << buf[BUFLEN] << endl;
         // cout << ntohs(this->partner_address.sin_port);
-      //  cout << "receive" << recv_len << endl;
+        cout << "receive" << recv_len << endl;
         if (this->partner_address.sin_port == 0) {
             this->partner_address = sender_address;
             this->partner_addr_length = sender_len;
@@ -75,19 +83,22 @@ void UdpService::openPortAndListen()
         {
             if (this->onReceiver != NULL)
             {
-
+                //mtx.lock();
                 if (buf[0] == 'n') {
+                    buf[recv_len] = '\0';
+                    cout << "before end" << buf << endl;
 
+                    cout << "end: " << full_receive_length << endl;
                     if (receive_data != NULL)
                     {
-                        cout<<"aaa"<<strlen(receive_data)<<endl;
-                        cout<<"bbb"<<(package_nums-1)*(BUFLEN-1)<<endl;
-                        if (full_receive_length>((package_nums-1)*(BUFLEN-1)))
+                        cout << "aaa" << strlen(receive_data) << endl;
+                        cout << "bbb" << (package_nums - 1) * (BUFLEN - 1) << endl;
+                        if (1 || full_receive_length > ((package_nums - 1) * (BUFLEN - 1)))
                         {
-                                receive_data[full_receive_length] = '\0';
-                                this->onReceiver(this->ui, receive_data);
+                            // receive_data[full_receive_length] = '\0';
+                            this->onReceiver(this->ui,receive_data);
                         }
-                         delete[] receive_data;
+                        delete[] receive_data;
 
                     }
                     full_receive_length = 0;
@@ -98,6 +109,7 @@ void UdpService::openPortAndListen()
                 if (buf[0] == 'p') {
                     this->receiveData(buf, recv_len, full_receive_length, receive_data);
                 }
+               // mtx.unlock();
             }
         }
     }
@@ -108,21 +120,22 @@ void UdpService::openPortAndListen()
         delete[] receive_data;
     }
 }
-
 int UdpService::receiveNums(char* buf, int length) {
     int package_nums = 0;
     for (int i = 1; i < length; i++) {
         package_nums = package_nums * 10 + (buf[i] - '0');
+
     }
+
     return package_nums;
 }
 void UdpService::receiveData(char* buf, int length, int& full_receive_length, char* receive_data) {
+    int i = 1;
     for (int i = 1; i < length; i++) {
         receive_data[full_receive_length] = buf[i];
         full_receive_length++;
     }
 }
-
 
 char* splitToPackage(char* arr, int begin, int len)
 {
@@ -133,49 +146,42 @@ char* splitToPackage(char* arr, int begin, int len)
     res[len + 2] = 0;
     return res;
 }
-void UdpService::setIsSendingFalse()
-{
-
-//    std::this_thread::sleep_for(std::chrono::seconds(3));
-    this->is_sending=false;
-}
 void UdpService::send(char* data) {
     if (this->is_sending==true) return;
     this->is_sending=true;
-//    cout<<"send: "<<strlen(data)<<endl;
     if (ntohs(this->partner_address.sin_port) == 0)return;
+    // data[strlen(data) + 1] = '\0';
     int data_len = BUFLEN - 1;
     int package_amount = strlen(data) / data_len + (strlen(data) % data_len == 0 ? 0 : 1);
+
     string tmp = std::to_string(package_amount);
     char const* num_char = tmp.c_str();
     char buf[BUFLEN] = "n";
     strcat(buf, num_char);
-    buf[strlen(buf)]=='\0';
+    buf[strlen(buf)] == '\0';
+    cout<<"send"<<strlen(data)<<endl;
 
+    // delete num_char;
     if (sendto(this->socket, buf, strlen(buf), 0, (struct sockaddr*)&this->partner_address, this->partner_addr_length) == -1)
     {
         die("sendto()");
     }
+    // cout << ntohs(this->partner_address.sin_port) << endl;
+    // cout << package_amount << endl;
     for (int i = 0; i < package_amount; i++) {
         char* buf = splitToPackage(data, i * data_len, min((int)(strlen(data) - i * data_len), (int)data_len));
+        // cout << buf << endl;
         if (sendto(this->socket, buf, strlen(buf), 0, (struct sockaddr*)&this->partner_address, this->partner_addr_length) == -1)
         {
             die("sendto()");
         }
-        delete buf;
+//        if (buf!=NULL)
+//        delete buf;
     }
-
-    this->setIsSendingFalse();
+     thread(&UdpService::setIsSendingFalse,this).detach();
 }
 
 
-
-UdpService::UdpService(Ui::MainWindow *ui,char* ip, int port)
-{
-    this->ui=ui;
-    setPartnerAddress(ip, port);
-
-}
 void UdpService::setPartnerAddress(char* ip, int port) {
 
     memset((char*)&this->partner_address, 0, sizeof(this->partner_addr_length));
@@ -191,10 +197,15 @@ void UdpService::setPartnerAddress(char* ip, int port) {
         exit(1);
     }
 }
+void UdpService::start() {
+    this->is_running = true;
+}
+void UdpService::stop() {
+    this->is_running = false;
+}
 
-void UdpService::start()
-{
-    this->is_running=true;
+UdpService::UdpService(Ui::MainWindow *ui)
+{   this->ui=ui;
     this->partner_addr_length = sizeof(partner_address);
 
     if ((this->socket = ::socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) == -1)
@@ -202,18 +213,28 @@ void UdpService::start()
         die("socket");
     }
     this->listenConnect = new thread(&UdpService::openPortAndListen, this);
+    this->listenConnect->detach();
 }
-UdpService::UdpService(Ui::MainWindow *ui)
+UdpService::UdpService(Ui::MainWindow *ui, char* ip, int port)
 {
     this->ui=ui;
-}
-bool UdpService::isRunning()
-{
-    return this->is_running;
+    setPartnerAddress(ip, port);
+    this->partner_addr_length = sizeof(partner_address);
+
+    if ((this->socket = ::socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) == -1)
+    {
+        die("socket");
+    }
+    this->listenConnect = new thread(&UdpService::openPortAndListen, this);
+    this->listenConnect->detach();
 }
 
 UdpService:: ~UdpService() {
-    this->listenConnect->join();
+
     delete this->listenConnect;
+
     close(this->socket);
+}
+bool UdpService::isRunning(){
+    return this->is_running;
 }
