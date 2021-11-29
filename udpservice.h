@@ -8,6 +8,10 @@
 #define mlog(x) do { \
   if (DEBUG_MODE) { std::cout << x << std::endl; } \
 } while (0)
+
+#ifndef BUFLEN
+#define BUFLEN 64000
+#endif
 #include <iostream>
 
 #include <arpa/inet.h>
@@ -16,11 +20,10 @@
 #include <string.h>
 #include <thread>
 #include <mutex>
-#define BUFLEN 64000
-
+#include <memory>
 namespace Ui
 {
-    class MainWindow;
+  class MainWindow;
 }
 
 
@@ -29,31 +32,35 @@ using namespace std;
 class UdpService
 {
 public:
-    UdpService(Ui::MainWindow *ui);
-    UdpService(Ui::MainWindow *ui, char* ip, int port);
+  UdpService(Ui::MainWindow* ui);
+  UdpService(Ui::MainWindow* ui, char* ip, int port);
 
-    ~UdpService();
-    void (*onReceiver)(Ui::MainWindow *ui, char* data);
-    void send(char* data);
+  ~UdpService();
 
-    void setPartnerAddress(char* ip, int port);
-    int getMyPort();
-    char* getMyIp();
-    void start();
-    void stop();
-    void openPortAndListen();
-    bool isRunning();
+
+
+  void setPartnerAddress(char* ip, int port);
+  int getMyPort();
+  void start();
+  void stop();
+  void openPortAndListen();
+  bool isRunning();
+  void setReceiveFrameListener(void (*onReceiveFrame)(Ui::MainWindow* ui, char* data));
+  void setReceiveSoundListener(void (*onReceiveSound)(Ui::MainWindow* ui, char* data));
+  void sendFrame(char* data);
+  void sendSound(char* data);
 private:
-    socklen_t socket;
-    struct sockaddr_in partner_address, my_address;
-    socklen_t partner_addr_length, my_addr_length;
-    thread * listenConnect=NULL;
-    Ui::MainWindow *ui;
-    int receiveNums(char*,int);
-    void receiveData(char*,int,int&,char*);
-    bool is_running;
-    bool is_sending;
-    void setIsSendingFalse();
+  void (*onReceiveFrame)(Ui::MainWindow* ui, char* data);
+  void (*onReceiveSound)(Ui::MainWindow* ui, char* data);
+  socklen_t socket;
+  struct sockaddr_in partner_address, my_address;
+  socklen_t partner_addr_length, my_addr_length;
+  thread* listenConnect = NULL;
+  Ui::MainWindow* ui;
+  void sendData(char* data, int flag);
+  bool is_running;
+  bool is_sending;
+  void setIsSendingFalse();
 };
 
 #endif // UDPSERVICE_H

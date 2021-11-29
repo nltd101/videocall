@@ -52,7 +52,7 @@ bool MyVideoSurface::present(const QVideoFrame &frame)
 
         if (this->service!=NULL&&this->service->isRunning()==true)
         {
-             this->service->send(data);
+             this->service->sendFrame(data);
         }
 
         QImage q = QImage((uchar*)data,WIDTH,HEIGHT,QImage::Format_RGB32);

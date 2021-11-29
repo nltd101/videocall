@@ -2,7 +2,7 @@
 #include "ui_mainwindow.h"
 
 void updateLabel(Ui::MainWindow *ui,char* data){
-    cout<<"receive: "<<strlen(data)<<endl;
+    cout<<"receive full: "<<strlen(data)<<endl;
     QImage image = QImage((uchar*)data,WIDTH,HEIGHT,QImage::Format_RGB32);
 
         //  QSize size= image.size();
@@ -10,6 +10,11 @@ void updateLabel(Ui::MainWindow *ui,char* data){
     QPixmap pm = QPixmap::fromImage(image);
     ui->partner_label->setPixmap( pm.scaled(ui->partner_label->size(), Qt::KeepAspectRatio, Qt::SmoothTransformation));
 }
+void startVoice(Ui::MainWindow *ui, char* data){
+     cout<<"receive sound: "<<data<<endl;
+     ui->label_port->setText(data);
+}
+
 using namespace std;
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -38,8 +43,8 @@ MainWindow::MainWindow(QWidget *parent) :
         else {
             ui->label->setText("No camera");
         }
-
-        udpservice->onReceiver=updateLabel;
+        udpservice->setReceiveFrameListener(updateLabel);
+         udpservice->setReceiveSoundListener(startVoice);
 }
 
 
@@ -64,7 +69,7 @@ void MainWindow::on_startCallButton_clicked()
      int n = port.toInt();
 
      if (n!=0){
-           udpservice->setPartnerAddress("0.0.0.0",n);
+           udpservice->setPartnerAddress("127.0.0.1",n);
      }
 
     udpservice->start();

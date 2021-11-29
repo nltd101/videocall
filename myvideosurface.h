@@ -23,7 +23,6 @@
 #include <QObject>
 #include <QBuffer>
 #include "udpservice.h"
-#include "utils.h"
 QT_BEGIN_NAMESPACE
 namespace Ui
 {
