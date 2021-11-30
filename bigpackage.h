@@ -1,24 +1,9 @@
-
-
 #ifndef BIGPACKAGE_H
 #define BIGPACKAGE_H
 
 #ifndef BUFLEN
 #define BUFLEN 64000
 #endif
-
-// #ifndef IMAGETYPE
-// #define IMAGETYPE 1
-// #endif
-// #ifndef IMAGE_P
-// #define IMAGE_P 2
-// #endif
-// #ifndef SOUND
-// #define SOUND 3
-// #endif
-// #ifndef SOUND_P
-// #define SOUND_P 4
-// #endif
 
 #include <cstring>
 #include <iostream>

@@ -46,7 +46,7 @@ BigPackage::BigPackage(char* data, int flag)
     this->is_inited = false;
 }
 void BigPackage::pushPackage(char* buf, int length) {
-    if (*buf != this->flag) return;
+    if (BigPackage::getFlag(buf) != BigPackage::getPackageFlag(this->flag)) return;
     for (int i = 1; i < length; i++) {
         this->data[this->full_length] = buf[i];
         this->full_length++;
@@ -57,10 +57,8 @@ int BigPackage::getPackageFlag(int flag) {
     switch (flag)
     {
     case BigPackage::FRAME:
-
         return FRAME_PACKAGE;
     case BigPackage::SOUND:
-
         return SOUND_PACKAGE;
         break;
 
@@ -69,7 +67,7 @@ int BigPackage::getPackageFlag(int flag) {
         break;
     }
     return -1;
-};
+}
 char* BigPackage::getPackage(int index) {
     if (index == 0)
     {
@@ -92,7 +90,7 @@ char* BigPackage::getPackage(int index) {
     int data_len = BUFLEN - 1;
     int begin = index * data_len;
     int len = std::min((int)(strlen(data) - index * data_len), (int)data_len);
-    cout << len << endl;
+
     char* res = new char[len + 1];
 
     res[0] = getPackageFlag(this->flag);

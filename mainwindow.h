@@ -9,12 +9,22 @@
 
 #endif
 #define DEBUG_MODE true
-#define mdebug(x) do { \
-  if (DEBUG_MODE) { std::cerr << x << std::endl; } \
-} while (0)
-#define mlog(x) do { \
-  if (DEBUG_MODE) { std::cout << x << std::endl; } \
-} while (0)
+#define mdebug(x)                  \
+  do                               \
+  {                                \
+    if (DEBUG_MODE)                \
+    {                              \
+      std::cerr << x << std::endl; \
+    }                              \
+  } while (0)
+#define mlog(x)                    \
+  do                               \
+  {                                \
+    if (DEBUG_MODE)                \
+    {                              \
+      std::cout << x << std::endl; \
+    }                              \
+  } while (0)
 
 #include <QMainWindow>
 #include <QCamera>
@@ -33,28 +43,40 @@
 #include <QMessageBox>
 #include <QByteArray>
 #include <mutex>
-namespace Ui {
-class MainWindow;
+#include <QProcess>
+#include <QIODevice>
+#include <QAudioOutput>
+#include <QtMath>
+#include <QAudioInput>
+using namespace std;
+namespace Ui
+{
+  class MainWindow;
 }
 class MainWindow : public QMainWindow
 {
-    Q_OBJECT
+  Q_OBJECT
 
 public:
-    explicit MainWindow(QWidget *parent = 0);
-    ~MainWindow();
-
+  explicit MainWindow(QWidget *parent = 0);
+  ~MainWindow();
 
 private slots:
-    void on_startCallButton_clicked();
-    void on_stopCallButton_clicked();
+  void on_startCallButton_clicked();
+  void on_stopCallButton_clicked();
+private slots:
+  void handleStateChanged(QAudio::State newState);
+  void stopRecording();
 
 private:
-    Ui::MainWindow *ui;
-    QCamera *camera;
-    MyVideoSurface *surface;
-    UdpService *udpservice;
-    void sendData(char* buf);
+  void startAudioCall();
+  Ui::MainWindow *ui;
+  QCamera *camera;
+  QAudioInput *inputaudio;
+  QAudioOutput *outputaudio;
+  MyVideoSurface *surface;
+  UdpService *udpservice;
+  void sendData(char *buf);
 };
 
 #endif // MAINWINDOW_H
