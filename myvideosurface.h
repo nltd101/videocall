@@ -2,11 +2,9 @@
 #define MYVIDEOSURFACE_H
 #ifndef WIDTH
 #define WIDTH 300
-
 #endif
 #ifndef HEIGHT
 #define HEIGHT 200
-
 #endif
 
 #include <QImage>
@@ -22,6 +20,7 @@
 #include <vector>
 #include <QObject>
 #include <QBuffer>
+#include <QMainWindow>
 #include "udpservice.h"
 QT_BEGIN_NAMESPACE
 namespace Ui
@@ -30,28 +29,23 @@ namespace Ui
 }
 QT_END_NAMESPACE
 
-// https://www.qtcentre.org/threads/57090-How-could-I-get-the-image-buffer-of-QCamera
 class MyVideoSurface : public QAbstractVideoSurface
 {
 
-//Q_OBJECT
+    // Q_OBJECT
 private:
-    Ui::MainWindow *ui;
     QCamera *camera;
-    UdpService* service;
-
+    UdpService *service;
+    void (*onNewFrame)(QMainWindow *, QImage);
+    QMainWindow *context;
 
 public:
-
-    MyVideoSurface(QObject *parent, Ui::MainWindow *ui, QCamera *camera, UdpService* service);
+    MyVideoSurface(QObject *parent, QCamera *camera, UdpService *service, void (*onNewFrame)(QMainWindow *, QImage));
     virtual ~MyVideoSurface();
 
     QList<QVideoFrame::PixelFormat>
     supportedPixelFormats(QAbstractVideoBuffer::HandleType type) const;
 
     bool present(const QVideoFrame &frame);
-
-private slots:
-    void on_stopCallButton_clicked();
 };
 #endif // MYVIDEOSURFACE_H

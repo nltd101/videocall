@@ -44,15 +44,15 @@
 #include <QByteArray>
 #include <mutex>
 #include <QProcess>
-#include <QIODevice>
-#include <QAudioOutput>
-#include <QtMath>
-#include <QAudioInput>
+#include "audiocall.h"
+#include "videocall.h"
 using namespace std;
+
 namespace Ui
 {
   class MainWindow;
 }
+class VideoCall;
 class MainWindow : public QMainWindow
 {
   Q_OBJECT
@@ -60,23 +60,25 @@ class MainWindow : public QMainWindow
 public:
   explicit MainWindow(QWidget *parent = 0);
   ~MainWindow();
+  Ui::MainWindow *getUi()
+  {
+    return this->ui;
+  }
 
 private slots:
   void on_startCallButton_clicked();
   void on_stopCallButton_clicked();
-private slots:
-  void handleStateChanged(QAudio::State newState);
-  void stopRecording();
 
 private:
   void startAudioCall();
   Ui::MainWindow *ui;
-  QCamera *camera;
-  QAudioInput *inputaudio;
-  QAudioOutput *outputaudio;
-  MyVideoSurface *surface;
-  UdpService *udpservice;
-  void sendData(char *buf);
-};
+  VideoCall *videocall;
+  AudioCall * audiocall;
+  static void onMyNewFrame(QMainWindow *main_window, QImage image);
+  static void onPartnerNewFrame(QMainWindow *main_window, QImage image);
 
+
+  UdpService *udpservice;
+
+};
 #endif // MAINWINDOW_H
