@@ -28,12 +28,16 @@ SOURCES += \
         mainwindow.cpp \
     myvideosurface.cpp \
     udpservice.cpp \
+    videocall.cpp \
+    audiocall.cpp \
     bigpackage.cpp
 
 HEADERS += \
         mainwindow.h \
     myvideosurface.h \
     udpservice.h \
+    videocall.h \
+    audiocall.h \
     bigpackage.h
 
 FORMS += \

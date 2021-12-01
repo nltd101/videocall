@@ -4,12 +4,13 @@
 #include <fstream>
 
 using namespace std;
-MyVideoSurface::MyVideoSurface(QObject *parent, Ui::MainWindow *ui, QCamera *camera, UdpService *service) : QAbstractVideoSurface(parent)
+MyVideoSurface::MyVideoSurface(QObject *parent, QCamera *camera, UdpService *service, void (*onNewFrame)(QMainWindow *, QImage)) : QAbstractVideoSurface(parent)
 {
-    this->service=service;
-    this->ui = ui;
-    this->camera = camera;
 
+    this->service = service;
+    this->onNewFrame = onNewFrame;
+    this->camera = camera;
+    this->context = (QMainWindow *)parent;
 }
 
 MyVideoSurface::~MyVideoSurface()
@@ -42,25 +43,24 @@ bool MyVideoSurface::present(const QVideoFrame &frame)
                          QVideoFrame::imageFormatFromPixelFormat(cloneFrame.pixelFormat()));
 
         QImage cp = img.copy();
-         cp=cp.scaled(WIDTH, HEIGHT, Qt::KeepAspectRatio);
+        cp = cp.scaled(WIDTH, HEIGHT, Qt::KeepAspectRatio);
 
         cloneFrame.unmap();
 
         cp = cp.mirrored(true, false);
 
-        char* data= (char*)cp.bits();
+        char *data = (char *)cp.bits();
 
-        if (this->service!=NULL&&this->service->isRunning()==true)
+        if (this->service != NULL && this->service->isRunning() == true)
         {
-             this->service->sendFrame(data);
+            this->service->sendFrame(data, strlen(data));
         }
 
-        QImage q = QImage((uchar*)data,WIDTH,HEIGHT,QImage::Format_RGB32);
-        QPixmap pm = QPixmap::fromImage(q);
-        ui->label->setPixmap(pm.scaled(ui->label->size(), Qt::KeepAspectRatio, Qt::SmoothTransformation));
+        //        QImage q = cp;//QImage((uchar*)data,WIDTH,HEIGHT,QImage::Format_RGB32);
+
+        this->onNewFrame(this->context, cp);
 
         return true;
     }
     return false;
 }
-
