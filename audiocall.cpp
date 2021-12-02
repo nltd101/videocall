@@ -13,18 +13,6 @@ AudioCall::~AudioCall()
     delete this->outputaudio;
 }
 
-void sound2(QIODevice *io, char *data, int length)
-{
-
-    QByteArray *byteBuffer = new QByteArray(data, strlen(data));
-
-    QBuffer *input = new QBuffer(byteBuffer);
-    input->open(QIODevice::ReadOnly); // set the QIODevice to read-only
-    io->write(*byteBuffer);
-    input->close();
-    delete input;
-}
-
 AudioCall::AudioCall(QMainWindow *context, UdpService *udp_service)
 {
     this->context = context;
@@ -65,15 +53,13 @@ AudioCall::AudioCall(QMainWindow *context, UdpService *udp_service)
     auto io = input_device;
     QObject::connect(io, &QIODevice::readyRead, [this, io]
                      {
-                QByteArray buff = input_device->readAll();
-               int buffLenght = buff.length();
-                if (buffLenght > 0)
-                {
-                    char *data = (char *)buff.constData();
-
-                   this->udp_service->sendSound(data,buffLenght);
-
-                } });
+                        QByteArray buff = input_device->readAll();
+                        int buffLenght = buff.length();
+                        if (buffLenght > 0)
+                        {
+                            char *data = (char *)buff.constData();
+                            this->udp_service->sendSound(data,buffLenght);
+                    } });
     this->udp_service->setReceiveSoundListener(this, &AudioCall::onRetriveSound);
 }
 
