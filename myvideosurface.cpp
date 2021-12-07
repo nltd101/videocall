@@ -10,6 +10,7 @@ MyVideoSurface::MyVideoSurface(QObject *parent, QCamera *camera, UdpService *ser
     this->service = service;
     this->camera = camera;
     this->context = (QMainWindow *)parent;
+    cout<<CONFIG;
 }
 
 MyVideoSurface::~MyVideoSurface()

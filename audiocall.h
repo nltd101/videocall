@@ -2,10 +2,10 @@
 #define AUDIOCALL_H
 
 #include <QIODevice>
-#include <QAudioOutput>
+#include <QtMultimedia/QAudioOutput>
 #include <QtMath>
-#include <QAudioInput>
-#include <QAudioFormat>
+#include <QtMultimedia/QAudioInput>
+#include <QtMultimedia/QAudioFormat>
 #include "udpservice.h"
 #include <QMainWindow>
 #include <QIODevice>
