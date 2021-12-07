@@ -54,7 +54,7 @@ void BigPackage::pushPackage(char *buf, int length)
         this->data[this->full_length] = buf[i];
         this->full_length++;
     }
-    this->last_length = length;
+    this->last_length = length-1;
 }
 int BigPackage::getPackageFlag(int flag)
 {

@@ -148,7 +148,7 @@ void UdpService::sendFrame(char *data, int length)
 }
 void UdpService::sendSound(char *data, int length)
 {
-    this->sendData(data, length, BigPackage::SOUND);
+   // this->sendData(data, length, BigPackage::SOUND);
 }
 
 void UdpService::sendData(char *data, int length, int flag)
@@ -157,7 +157,7 @@ void UdpService::sendData(char *data, int length, int flag)
         return;
     if (ntohs(this->partner_address.sin_port) == 0)
         return;
-
+    cout<<"length send"<<length<<endl;
     unique_ptr<BigPackage> data_to_send = unique_ptr<BigPackage>(new BigPackage(data, length, flag));
 
     int package_amount = data_to_send->getAmountPackageToSend();
@@ -209,7 +209,7 @@ UdpService::UdpService()
         die("socket");
     }
     this->listenConnect = new thread(&UdpService::openPortAndListen, this);
-    this->listenConnect->detach();
+    //this->listenConnect->detach();
 }
 UdpService::UdpService(char *ip, int port)
 {
@@ -221,13 +221,19 @@ UdpService::UdpService(char *ip, int port)
         die("socket");
     }
     this->listenConnect = new thread(&UdpService::openPortAndListen, this);
-    this->listenConnect->detach();
+
 }
 
 UdpService::~UdpService()
 {
 
-    delete this->listenConnect;
+
+    if (this->listenConnect!=NULL)
+    {
+         this->listenConnect->join();
+         delete this->listenConnect;
+    }
+
 
     close(this->socket);
 }

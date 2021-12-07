@@ -1,6 +1,6 @@
 #include "audiocall.h"
 #include <mutex>
-mutex a;
+
 void AudioCall::onRetriveSound(void *parrent, char *data, int length)
 {
     AudioCall *displayer = static_cast<AudioCall *>(parrent);
@@ -65,12 +65,12 @@ AudioCall::AudioCall(QMainWindow *context, UdpService *udp_service)
 
 void AudioCall::sound(char *data, int length)
 {
-    a.lock();
+
     QByteArray *byteBuffer = new QByteArray(data, length);
     QBuffer *input = new QBuffer(byteBuffer);
     input->open(QIODevice::ReadOnly);
     output_device->write(*byteBuffer);
     input->close();
     delete input;
-    a.unlock();
+
 }

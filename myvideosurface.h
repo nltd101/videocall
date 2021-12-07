@@ -4,7 +4,7 @@
 #define WIDTH 300
 #endif
 #ifndef HEIGHT
-#define HEIGHT 200
+#define HEIGHT 300
 #endif
 
 #include <QImage>
@@ -22,6 +22,7 @@
 #include <QBuffer>
 #include <QMainWindow>
 #include "udpservice.h"
+#include "debugmarco.h"
 QT_BEGIN_NAMESPACE
 namespace Ui
 {
@@ -36,11 +37,14 @@ class MyVideoSurface : public QAbstractVideoSurface
 private:
     QCamera *camera;
     UdpService *service;
-    void (*onNewFrame)(QMainWindow *, QImage);
+    void (*onNewFrame)(void *, QImage);
     QMainWindow *context;
-
+    void convertRGBImageToYUVchar(QImage*, char*);
+    void convertYUVcharToRGBImage(char*,QImage*);
+    void* contextNewFrame;
 public:
-    MyVideoSurface(QObject *parent, QCamera *camera, UdpService *service, void (*onNewFrame)(QMainWindow *, QImage));
+    void setOnMyFrameListener(void*, void (*)(void *, QImage));
+    MyVideoSurface(QObject *parent, QCamera *camera, UdpService *service);
     virtual ~MyVideoSurface();
 
     QList<QVideoFrame::PixelFormat>

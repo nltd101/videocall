@@ -4,11 +4,10 @@
 #include <fstream>
 
 using namespace std;
-MyVideoSurface::MyVideoSurface(QObject *parent, QCamera *camera, UdpService *service, void (*onNewFrame)(QMainWindow *, QImage)) : QAbstractVideoSurface(parent)
+MyVideoSurface::MyVideoSurface(QObject *parent, QCamera *camera, UdpService *service) : QAbstractVideoSurface(parent)
 {
 
     this->service = service;
-    this->onNewFrame = onNewFrame;
     this->camera = camera;
     this->context = (QMainWindow *)parent;
 }
@@ -29,6 +28,10 @@ QList<QVideoFrame::PixelFormat> MyVideoSurface::supportedPixelFormats(QAbstractV
         return QList<QVideoFrame::PixelFormat>();
     }
 }
+void MyVideoSurface::setOnMyFrameListener(void* context, void (*onNewFrame)(void *, QImage)){
+  this->contextNewFrame =context;
+  this->onNewFrame =onNewFrame;
+}
 
 bool MyVideoSurface::present(const QVideoFrame &frame)
 {
@@ -40,25 +43,18 @@ bool MyVideoSurface::present(const QVideoFrame &frame)
         const QImage img(cloneFrame.bits(),
                          cloneFrame.width(),
                          cloneFrame.height(),
-                         QVideoFrame::imageFormatFromPixelFormat(cloneFrame.pixelFormat()));
+                         QVideoFrame::imageFormatFromPixelFormat(cloneFrame.pixelFormat())
+                         );
 
         QImage cp = img.copy();
-        cp = cp.scaled(WIDTH, HEIGHT, Qt::KeepAspectRatio);
 
         cloneFrame.unmap();
-
         cp = cp.mirrored(true, false);
 
-        char *data = (char *)cp.bits();
 
-        if (this->service != NULL && this->service->isRunning() == true)
-        {
-            this->service->sendFrame(data, strlen(data));
-        }
-
-        //        QImage q = cp;//QImage((uchar*)data,WIDTH,HEIGHT,QImage::Format_RGB32);
-
-        this->onNewFrame(this->context, cp);
+        if (this->onNewFrame)
+            this->onNewFrame(this->contextNewFrame, cp );
+//        delete q;
 
         return true;
     }

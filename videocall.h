@@ -8,7 +8,7 @@
 #include "myvideosurface.h"
 #include "mainwindow.h"
 #include <QImage>
-
+#include "debugmarco.h"
 class VideoCall
 {
 private:
@@ -17,10 +17,14 @@ private:
     QMainWindow *context;
     void (*onPartnerFrameListener)(QMainWindow *, QImage);
     static void onRetriveFrame(void *, char *, int);
-
+    static void onNewFrame(void *, QImage);
+    char* convertRGBImageToYUVchar(QImage);
+    QImage convertYUVcharToRGBImage(char*);
+    void (*onMyFrameListener)(QMainWindow *, QImage);
 public:
     ~VideoCall();
-    void handleNewVideoFrame(QImage);
+    void handleReceivedFrame(QImage);
+    void handleNewFrame(QImage);
     VideoCall(QMainWindow *context, UdpService *udp_service, void (*)(QMainWindow *, QImage), void (*)(QMainWindow *, QImage));
 };
 

@@ -1,13 +1,5 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
-#ifndef WIDTH
-#define WIDTH 300
-
-#endif
-#ifndef HEIGHT
-#define HEIGHT 200
-
-#endif
 #define DEBUG_MODE true
 #define mdebug(x)                  \
   do                               \
