@@ -42,5 +42,13 @@ HEADERS += \
 
 FORMS += \
         mainwindow.ui
+CONFIG(debug, debug|release) {
+    DESTDIR = build/debug
+} else {
+    DESTDIR = build/release
+}
+CONFIG(release, debug|release):DEFINES += DEBUG_MODE=0 #will print
+CONFIG(debug, debug|release):DEFINES += DEBUG_MODE=1 #no print
+#$${DEBUG}
 #QMAKE_CXXFLAGS += -std=gnu++14
 

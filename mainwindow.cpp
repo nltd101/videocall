@@ -22,6 +22,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent),
 {
     ui->setupUi(this);
     setAcceptDrops(true);
+
     udpservice = new UdpService();
     audiocall = new AudioCall(this,udpservice);
     videocall = new VideoCall(this,udpservice,onMyNewFrame,onPartnerNewFrame);

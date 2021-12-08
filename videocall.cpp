@@ -3,7 +3,6 @@
 void VideoCall::onRetriveFrame(void *parrent, char *data, int length)
 {
     VideoCall *displayer = static_cast<VideoCall *>(parrent);
-    cout <<"length: receive : "<< length << endl;
     data[length]='\0';
     QImage image =  QImage((uchar *)data, WIDTH, HEIGHT, QImage::Format_RGB32);
     displayer->handleReceivedFrame(image);
@@ -12,9 +11,6 @@ void VideoCall::onRetriveFrame(void *parrent, char *data, int length)
 void VideoCall::onNewFrame(void *parrent, QImage image)
 {
     VideoCall *displayer = static_cast<VideoCall *>(parrent);
-    //cout <<"length: receive : "<< length << endl;
-//    data[length]='\0';
-    //QImage image = QImage((uchar *)data, WIDTH, HEIGHT, QImage::Format_RGB888);
     displayer->handleNewFrame(image);
 }
 void VideoCall::handleReceivedFrame(QImage image)
@@ -40,8 +36,6 @@ void convertYUVtoRGB(unsigned char Y, unsigned char U, unsigned char V, unsigned
 
 }
 void convertRGBtoYUV(unsigned char R, unsigned char G, unsigned char B, unsigned char& Y, unsigned char& U, unsigned char& V) {
-    //    [0.257, 0.504, 0.239], [-0.178, - 0.322, 0.500],
-    //                  [0.500, - 0.368, - 0.132, ]
     Y = ((66 * R + 129 * G + 61 * B) >> 8);
 
     U = ((-46 * R - 82 * G + 128 * B) >> 8) + 128;
@@ -50,9 +44,6 @@ void convertRGBtoYUV(unsigned char R, unsigned char G, unsigned char B, unsigned
 }
 
 char* VideoCall::convertRGBImageToYUVchar(QImage image){
-//    [0.257, 0.504, 0.239], [-0.178, - 0.322, 0.500],
-//                  [0.500, - 0.368, - 0.132, ]
-//    for ()
     unsigned short width = image.width();
     unsigned short height = image.height();
     int y_len = width*height;
@@ -64,7 +55,6 @@ char* VideoCall::convertRGBImageToYUVchar(QImage image){
     data[2] = height >> 8;
     data[3] = height & 0xFF;
 
-    int maxlength=0;
     for (int y = 0; y< height; y++)
         for (int x = 0; x< width; x++){
             QColor clrCurrent( image.pixel(x,y));
@@ -78,10 +68,9 @@ char* VideoCall::convertRGBImageToYUVchar(QImage image){
             {
                 data[4+y_len+ y/2*((width+1)/2)+x/2]=(char)U;
                 data[4+y_len+uv_len+y/2*((width+1)/2)+x/2]=(char)V;
-                maxlength=4+y_len+uv_len+(y/2)*((width+1)/2)+x/2;
             }
     }
-    cout<<maxlength<<endl;
+
     return data;
 }
 QImage VideoCall::convertYUVcharToRGBImage(char* data){
@@ -103,9 +92,6 @@ QImage VideoCall::convertYUVcharToRGBImage(char* data){
         QColor clrCurrent= QColor((unsigned char)R,(unsigned char)G,(unsigned char)B);
 
         image.setPixelColor(x,y,clrCurrent);
-        if (x==5 && y==5){
-            mlog("stop");
-        }
     }
     delete imgbuf;
     return image;

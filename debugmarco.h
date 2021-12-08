@@ -1,6 +1,6 @@
 #ifndef DEBUGMARCO_H
 #define DEBUGMARCO_H
-#define DEBUG_MODE true
+
 #define mdebug(x)                  \
   do                               \
   {                                \
