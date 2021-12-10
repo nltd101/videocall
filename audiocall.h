@@ -14,19 +14,19 @@
 class AudioCall
 {
 private:
-  UdpService *udp_service;
+  UdpService *udpService;
   QMainWindow *context;
-  QIODevice *input_device;
-  QIODevice *output_device;
-  QAudioInput *inputaudio;
-  QAudioOutput *outputaudio;
+  QIODevice *inputDevice;
+  QIODevice *outputDevice;
+  QAudioInput *inputAudio;
+  QAudioOutput *outputAudio;
 private slots:
   void handleStateChanged(QAudio::State newState);
-  static void onRetriveSound(void *parrent, char *data, int length);
+  static void onRetriveSound(void *parrent,unsigned char *data, int length);
 
 public:
   ~AudioCall();
-  void sound(char *data, int length);
+  void sound(unsigned char *data, int length);
   AudioCall(QMainWindow *, UdpService *);
 };
 

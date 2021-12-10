@@ -2,38 +2,42 @@
 #define BIGPACKAGE_H
 
 #ifndef BUFLEN
-#define BUFLEN 64000
+#define BUFLEN 1460
+const int PACKAGESIZE = BUFLEN - 2;
 #endif
-
 #include <cstring>
 #include <iostream>
 #include <tuple>
+#include <bitset>
 class tuple;
 class BigPackage
 {
 public:
-    static const int FRAME = 1;
+    static const int FRAME = 0;
     static const int SOUND = 2;
-    static const int FRAME_PACKAGE = 3;
-    static const int SOUND_PACKAGE = 4;
-    BigPackage(int amount, int flag);
-    BigPackage(char *data, int length, int tag);
+    static const int FRAME_PACKAGE = 1;
+    static const int SOUND_PACKAGE = 3;
+
+    BigPackage(unsigned char* firstPackage, int length);
+    BigPackage(unsigned char* data, int length, int tag);
     BigPackage();
-    void pushPackage(char *buf, int length);
-    std::tuple<char *, int> getPackage(int index);
-    static char getFlag(char *amount);
+    void pushPackage(unsigned char* buf, int length);
+    std::tuple<unsigned char*, int> getPackageToSend(int index);
+    static unsigned char getFlag(unsigned char* amount);
     static int getPackageFlag(int flag);
-    std::tuple<char *, int> getCharData();
+    std::tuple< unsigned char*, int> getCharData();
     int getFullLength();
     int getAmountPackageToSend();
     ~BigPackage();
 
 private:
-    int last_length;
-    bool is_inited;
-    int p_amount;
-    char *data;
-    int full_length;
+
+
+    int lastLength;
+    bool isAllocatedData;
+    int packageNums;
+    unsigned char* data;
+    int dataLength;
     int flag;
 };
 

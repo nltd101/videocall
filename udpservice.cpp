@@ -1,110 +1,99 @@
 #include "udpservice.h"
 #include "bigpackage.h"
-std::mutex mtx;
-void die(char *s)
+
+void die(char* s)
 {
-    perror(s);
-    exit(1);
+    mdebug(s);
 }
 int UdpService::getMyPort()
 {
-    return ntohs(this->my_address.sin_port);
+    return ntohs(this->myAddress.sin_port);
 }
 
 void UdpService::openPortAndListen()
 {
-    memset((char *)&this->my_address, 0, sizeof(this->my_address));
-    this->my_address.sin_family = AF_INET;
-    this->my_address.sin_port = htons(0);
-    this->my_address.sin_addr.s_addr = htonl(INADDR_ANY);
+    memset((char*)&this->myAddress, 0, sizeof(this->myAddress));
+    this->myAddress.sin_family = AF_INET;
+    this->myAddress.sin_port = htons(0);
+    this->myAddress.sin_addr.s_addr = htonl(INADDR_ANY);
 
     // bind socket to port
 
-    if (bind(this->socket, (struct sockaddr *)&this->my_address, sizeof(this->my_address)) == -1)
+    if (bind(this->socket, (struct sockaddr*)&this->myAddress, sizeof(this->myAddress)) == -1)
     {
         die("bind");
     }
 
-    socklen_t len = sizeof(this->my_address);
-    getsockname(this->socket, (struct sockaddr *)&this->my_address, &len);
+    socklen_t len = sizeof(this->myAddress);
+    getsockname(this->socket, (struct sockaddr*)&this->myAddress, &len);
 
     cout << "local port: %d" << this->getMyPort() << endl;
-    char buf[BUFLEN];
+    unsigned char buf[BUFLEN];
 
-    struct sockaddr_in sender_address;
-    socklen_t sender_len, recv_len;
+    struct sockaddr_in senderAddress;
+    socklen_t senderLen, recvLen;
 
-    unique_ptr<BigPackage> frame_package = nullptr;
-    unique_ptr<BigPackage> sound_package = nullptr;
-    while (this->is_running)
+    unique_ptr<BigPackage> framePackage = nullptr;
+    unique_ptr<BigPackage> soundPackage = nullptr;
+    while (true)
     {
-
-        if ((recv_len = recvfrom(this->socket, buf, BUFLEN, 0, (struct sockaddr *)&sender_address, &sender_len)) == -1)
+        if (!isRunning) continue;
+        if ((recvLen = recvfrom(this->socket, buf, BUFLEN, 0, (struct sockaddr*)&senderAddress, &senderLen)) == -1)
         {
             die("recvfrom()");
         }
 
-        if (ntohs(this->partner_address.sin_port) == 0)
+        if (ntohs(this->partnerAddress.sin_port) == 0)
         {
-            this->partner_address = sender_address;
-            this->partner_addr_length = sender_len;
+            this->partnerAddress = senderAddress;
+            this->partnerAddrLength = senderLen;
         }
-        if ((sender_address.sin_addr.s_addr == this->partner_address.sin_addr.s_addr && sender_address.sin_port == this->partner_address.sin_port && sender_len == this->partner_addr_length))
+        if ((senderAddress.sin_addr.s_addr == this->partnerAddress.sin_addr.s_addr && senderAddress.sin_port == this->partnerAddress.sin_port && senderLen == this->partnerAddrLength))
         {
-
             int flag = BigPackage::getFlag(buf);
-
             switch (flag)
             {
             case BigPackage::FRAME:
                 if (this->onReceiveFrame != NULL)
                 {
-                    if (frame_package != nullptr)
+                    if (framePackage != nullptr)
                     {
-                        char *data;
+                        unsigned char* data;
                         int length;
-                        std::tie(data, length) = frame_package->getCharData();
-                        this->onReceiveFrame(this->frame_parent, data, length);
-                        frame_package.reset();
+                        std::tie(data, length) = framePackage->getCharData();
+                        this->onReceiveFrame(this->frameParent, data, length);
+                        framePackage.reset();
                     }
-                    int package_nums = 0;
-                    for (int i = 1; i < recv_len; i++)
-                    {
-                        package_nums = package_nums * 10 + (buf[i] - '0');
-                    }
-                    frame_package = unique_ptr<BigPackage>(new BigPackage(package_nums, BigPackage::FRAME));
+
+                    framePackage = unique_ptr<BigPackage>(new BigPackage(buf, recvLen));
                 }
                 break;
             case BigPackage::FRAME_PACKAGE:
-                if (this->onReceiveFrame != NULL && frame_package != nullptr)
+                if (this->onReceiveFrame != NULL && framePackage != nullptr)
                 {
-                    frame_package->pushPackage(buf, recv_len);
+                    framePackage->pushPackage(buf, recvLen);
                 }
 
                 break;
             case BigPackage::SOUND:
                 if (this->onReceiveSound != NULL)
                 {
-                    if (sound_package != nullptr)
+                    if (soundPackage != nullptr)
                     {
-                        char *data;
+                        unsigned char* data;
                         int length;
-                        std::tie(data, length) = sound_package->getCharData();
-                        this->onReceiveSound(this->sound_parent, data, length);
-                        sound_package.reset();
+                        std::tie(data, length) = soundPackage->getCharData();
+                        this->onReceiveSound(this->soundParent, data, length);
+                        soundPackage.reset();
                     }
-                    int package_nums = 0;
-                    for (int i = 1; i < recv_len; i++)
-                    {
-                        package_nums = package_nums * 10 + (buf[i] - '0');
-                    }
-                    sound_package = unique_ptr<BigPackage>(new BigPackage(package_nums, BigPackage::SOUND));
+
+                    soundPackage = unique_ptr<BigPackage>(new BigPackage(buf, recvLen));
                 }
                 break;
             case BigPackage::SOUND_PACKAGE:
-                if (this->onReceiveSound != NULL && sound_package != nullptr)
+                if (this->onReceiveSound != NULL && soundPackage != nullptr)
                 {
-                    sound_package->pushPackage(buf, recv_len);
+                    soundPackage->pushPackage(buf, recvLen);
                 }
 
                 break;
@@ -113,63 +102,62 @@ void UdpService::openPortAndListen()
             }
         }
     }
-    if (frame_package != nullptr && this->onReceiveFrame != NULL)
+    if (framePackage != nullptr && this->onReceiveFrame != NULL)
     {
-        char *data;
+        unsigned char* data;
         int length;
-        std::tie(data, length) = frame_package->getCharData();
-        this->onReceiveFrame(this->frame_parent, data, length);
-        frame_package.reset();
+        std::tie(data, length) = framePackage->getCharData();
+        this->onReceiveFrame(this->frameParent, data, length);
+        framePackage.reset();
     }
-    if (sound_package != nullptr && this->onReceiveSound != NULL)
+    if (soundPackage != nullptr && this->onReceiveSound != NULL)
     {
-        char *data;
+        unsigned char* data;
         int length;
-        std::tie(data, length) = frame_package->getCharData();
-        this->onReceiveSound(this->sound_parent, data, length);
-        sound_package.reset();
+        std::tie(data, length) = soundPackage->getCharData();
+        this->onReceiveSound(this->soundParent, data, length);
+        soundPackage.reset();
     }
 }
 
-void UdpService::setReceiveFrameListener(void *parent, void (*onReceiveFrame)(void *parent, char *data, int length))
+void UdpService::setReceiveFrameListener(void* parent, void (*onReceiveFrame)(void* parent, unsigned char* data, int length))
 {
-    this->frame_parent = parent;
+    this->frameParent = parent;
     this->onReceiveFrame = onReceiveFrame;
 }
-void UdpService::setReceiveSoundListener(void *parent, void (*onReceiveSound)(void *parent, char *data, int length))
+void UdpService::setReceiveSoundListener(void* parent, void (*onReceiveSound)(void* parent, unsigned char* data, int length))
 {
-    this->sound_parent = parent;
+    this->soundParent = parent;
     this->onReceiveSound = onReceiveSound;
 }
 
-void UdpService::sendFrame(char *data, int length)
+void UdpService::sendFrame(unsigned char* data, int length)
 {
     this->sendData(data, length, BigPackage::FRAME);
 }
-void UdpService::sendSound(char *data, int length)
+void UdpService::sendSound(unsigned char* data, int length)
 {
-   // this->sendData(data, length, BigPackage::SOUND);
+    this->sendData(data, length, BigPackage::SOUND);
 }
 
-void UdpService::sendData(char *data, int length, int flag)
+void UdpService::sendData(unsigned char* data, int length, int flag)
 {
-    if (this->is_running == false)
+    if (this->isRunning == false)
         return;
-    if (ntohs(this->partner_address.sin_port) == 0)
+    if (ntohs(this->partnerAddress.sin_port) == 0)
         return;
-    cout<<"length send"<<length<<endl;
-    unique_ptr<BigPackage> data_to_send = unique_ptr<BigPackage>(new BigPackage(data, length, flag));
+    bytePerS += length;
 
-    int package_amount = data_to_send->getAmountPackageToSend();
+    unique_ptr<BigPackage> dataToSend = unique_ptr<BigPackage>(new BigPackage(data, length, flag));
 
-    for (int i = 0; i < package_amount; i++)
+    int packageAmount = dataToSend->getAmountPackageToSend();
+
+    for (int i = 0; i < packageAmount; i++)
     {
-
-        char *data;
+        unsigned char* data;
         int length;
-        std::tie(data, length) = data_to_send->getPackage(i);
-
-        if (sendto(this->socket, data, length, 0, (struct sockaddr *)&this->partner_address, this->partner_addr_length) == -1)
+        std::tie(data, length) = dataToSend->getPackageToSend(i);
+        if (sendto(this->socket, data, length, 0, (struct sockaddr*)&this->partnerAddress, this->partnerAddrLength) == -1)
         {
             die("sendto()");
         }
@@ -177,15 +165,15 @@ void UdpService::sendData(char *data, int length, int flag)
     }
 }
 
-void UdpService::setPartnerAddress(char *ip, int port)
+void UdpService::setPartnerAddress(char* ip, int port)
 {
 
-    memset((char *)&this->partner_address, 0, sizeof(this->partner_addr_length));
-    this->partner_address.sin_family = AF_INET;
-    this->partner_address.sin_port = htons(port);
+    memset((char*)&this->partnerAddress, 0, sizeof(this->partnerAddrLength));
+    this->partnerAddress.sin_family = AF_INET;
+    this->partnerAddress.sin_port = htons(port);
 
-    cout << "partner's port:" << ntohs(this->partner_address.sin_port) << endl;
-    if (inet_aton(ip, &this->partner_address.sin_addr) == 0)
+    cout << "partner's port:" << ntohs(this->partnerAddress.sin_port) << endl;
+    if (inet_aton(ip, &this->partnerAddress.sin_addr) == 0)
     {
         fprintf(stderr, "inet_aton() failed\n");
         exit(1);
@@ -193,51 +181,67 @@ void UdpService::setPartnerAddress(char *ip, int port)
 }
 void UdpService::start()
 {
-    this->is_running = true;
+    this->isRunning = true;
 }
 void UdpService::stop()
 {
-    this->is_running = false;
+    this->isRunning = false;
 }
 
 UdpService::UdpService()
 {
-    this->partner_addr_length = sizeof(partner_address);
+    this->partnerAddrLength = sizeof(partnerAddress);
 
     if ((this->socket = ::socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) == -1)
     {
         die("socket");
     }
     this->listenConnect = new thread(&UdpService::openPortAndListen, this);
-    //this->listenConnect->detach();
+        this->timmerThread = new thread(&UdpService::startTimer, this);
 }
-UdpService::UdpService(char *ip, int port)
+void UdpService::startTimer()
+{
+    // infinite loop because timer will keep
+    // counting. To kill the process press
+    // Ctrl+D. If it does not work ask
+    // ubuntu for other ways.
+    while (true) {
+
+        // display the timer
+
+        // sleep system call to sleep
+        // for 1 second
+        sleep(1);
+        // kilo bit per second
+        cout << bytePerS * 8 / 1000 << "kbps" << endl;
+        // increment seconds
+        bytePerS = 0;
+    }
+}
+UdpService::UdpService(char* ip, int port)
 {
     setPartnerAddress(ip, port);
-    this->partner_addr_length = sizeof(partner_address);
+    this->partnerAddrLength = sizeof(partnerAddress);
 
     if ((this->socket = ::socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) == -1)
     {
         die("socket");
     }
     this->listenConnect = new thread(&UdpService::openPortAndListen, this);
-
+       this->timmerThread = new thread(&UdpService::startTimer, this);
 }
 
 UdpService::~UdpService()
 {
+    this->listenConnect->join();
+    this->timmerThread->join();
 
-
-    if (this->listenConnect!=NULL)
+    if (this->listenConnect != NULL)
     {
-         this->listenConnect->join();
-         delete this->listenConnect;
+
+        delete this->listenConnect;
     }
-
-
+    delete this->timmerThread;
     close(this->socket);
 }
-bool UdpService::isRunning()
-{
-    return this->is_running;
-}
+

@@ -48,13 +48,13 @@ private slots:
 private:
   void startAudioCall();
   Ui::MainWindow *ui;
-  VideoCall *videocall;
-  AudioCall * audiocall;
-  static void onMyNewFrame(QMainWindow *main_window, QImage image);
-  static void onPartnerNewFrame(QMainWindow *main_window, QImage image);
+  VideoCall *videoCall;
+  AudioCall * audioCall;
+  static void onMyNewFrame(QMainWindow *mainWindow, QImage image);
+  static void onPartnerNewFrame(QMainWindow *mainWindow, QImage image);
 
 
-  UdpService *udpservice;
+  UdpService *udpService;
 
 };
 #endif // MAINWINDOW_H

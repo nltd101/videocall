@@ -1,7 +1,7 @@
 #include "audiocall.h"
 #include <mutex>
 
-void AudioCall::onRetriveSound(void *parrent, char *data, int length)
+void AudioCall::onRetriveSound(void *parrent,unsigned char *data, int length)
 {
     AudioCall *displayer = static_cast<AudioCall *>(parrent);
 
@@ -9,14 +9,14 @@ void AudioCall::onRetriveSound(void *parrent, char *data, int length)
 }
 AudioCall::~AudioCall()
 {
-    delete this->inputaudio;
-    delete this->outputaudio;
+    delete this->inputAudio;
+    delete this->outputAudio;
 }
 
-AudioCall::AudioCall(QMainWindow *context, UdpService *udp_service)
+AudioCall::AudioCall(QMainWindow *context, UdpService *udpService)
 {
     this->context = context;
-    this->udp_service = udp_service;
+    this->udpService = udpService;
     QAudioFormat format;
 
     format.setSampleRate(8000);
@@ -31,45 +31,45 @@ AudioCall::AudioCall(QMainWindow *context, UdpService *udp_service)
     {
         qWarning() << "Default format not supported, trying to use the nearest.";
 
-        inputaudio = new QAudioInput(inputinfor.nearestFormat(format), context);
+        inputAudio = new QAudioInput(inputinfor.nearestFormat(format), context);
     }
     else
     {
-        inputaudio = new QAudioInput(format, context);
+        inputAudio = new QAudioInput(format, context);
     }
     QAudioDeviceInfo outputinfor = QAudioDeviceInfo::defaultOutputDevice();
     if (!outputinfor.isFormatSupported(format))
     {
         qWarning() << "Default format not supported, trying to use the nearest.";
 
-        outputaudio = new QAudioOutput(outputinfor.nearestFormat(format), context);
+        outputAudio = new QAudioOutput(outputinfor.nearestFormat(format), context);
     }
     else
     {
-        outputaudio = new QAudioOutput(format, context);
+        outputAudio = new QAudioOutput(format, context);
     }
-    input_device = inputaudio->start();
-    output_device = outputaudio->start();
-    auto io = input_device;
+    inputDevice = inputAudio->start();
+    outputDevice = outputAudio->start();
+    auto io = inputDevice;
     QObject::connect(io, &QIODevice::readyRead, [this, io]
                      {
-                        QByteArray buff = input_device->readAll();
+                        QByteArray buff = inputDevice->readAll();
                         int buffLenght = buff.length();
                         if (buffLenght > 0)
                         {
-                            char *data = (char *)buff.constData();
-                            this->udp_service->sendSound(data,buffLenght);
+                            unsigned char *data = (unsigned char *)buff.constData();
+                            this->udpService->sendSound(data,buffLenght);
                     } });
-    this->udp_service->setReceiveSoundListener(this, &AudioCall::onRetriveSound);
+    this->udpService->setReceiveSoundListener(this, &AudioCall::onRetriveSound);
 }
 
-void AudioCall::sound(char *data, int length)
+void AudioCall::sound(unsigned char *data, int length)
 {
 
-    QByteArray *byteBuffer = new QByteArray(data, length);
+    QByteArray *byteBuffer = new QByteArray((char*)data, length);
     QBuffer *input = new QBuffer(byteBuffer);
     input->open(QIODevice::ReadOnly);
-    output_device->write(*byteBuffer);
+    outputDevice->write(*byteBuffer);
     input->close();
     delete input;
 

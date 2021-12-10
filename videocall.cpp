@@ -1,11 +1,10 @@
 #include "videocall.h"
 
-void VideoCall::onRetriveFrame(void *parrent, char *data, int length)
+void VideoCall::onRetriveFrame(void *parrent,unsigned char *data, int length)
 {
     VideoCall *displayer = static_cast<VideoCall *>(parrent);
-    data[length]='\0';
-    QImage image =  QImage((uchar *)data, WIDTH, HEIGHT, QImage::Format_RGB32);
-    displayer->handleReceivedFrame(image);
+
+    displayer->handleReceivedFrame(data,length);
 
 }
 void VideoCall::onNewFrame(void *parrent, QImage image)
@@ -13,25 +12,27 @@ void VideoCall::onNewFrame(void *parrent, QImage image)
     VideoCall *displayer = static_cast<VideoCall *>(parrent);
     displayer->handleNewFrame(image);
 }
-void VideoCall::handleReceivedFrame(QImage image)
+void VideoCall::handleReceivedFrame(unsigned char* data,int length)
 {
+    QImage image = convertYUVcharToRGBImage(data,length);
     this->onPartnerFrameListener(context, image);
 }
 void VideoCall::handleNewFrame(QImage image)
 {
     this->onMyFrameListener(context,image);
     image = image.scaled(WIDTH, HEIGHT, Qt::KeepAspectRatio);
-    char *data = this->convertRGBImageToYUVchar(image);
+    unsigned char *data;
+    int length;
+    tie(data,length)= this->convertRGBImageToYUVchar(image);
 
-    QImage image2 = this->convertYUVcharToRGBImage(data);
-    //delete data;
-    this->onPartnerFrameListener(context,image2);
+    this->udpService->sendFrame(data,length);
+    delete data;
 }
 void convertYUVtoRGB(unsigned char Y, unsigned char U, unsigned char V, unsigned char& R, unsigned char& G, unsigned char& B) {
 
-    R = ((256 * Y - 24 * U + 24 * 128 + 372 * V - 372 * 128) >> 8);
-    G = ((256 * Y - 173 * U + 173 * 128 - 193 * V + 193 * 128) >> 8);
-    B = ((256 * Y + 392 * U - 392 * 128 + 8 * V - 8 * 128) >> 8);
+    R = (max(0, 256 * Y - 24 * U + 24 * 128 + 372 * V - 372 * 128) >> 8);
+    G = (max(0, 256 * Y - 174 * U + 174 * 128 - 194 * V + 193 * 128) >> 8);
+    B = (max(0, 256 * Y + 392 * U - 392 * 128 + 9 * V - 9 * 128) >> 8);
 
 
 }
@@ -42,14 +43,13 @@ void convertRGBtoYUV(unsigned char R, unsigned char G, unsigned char B, unsigned
 
     V = ((128 * R - 94 * G - 34 * B) >> 8) + 128;
 }
-
-char* VideoCall::convertRGBImageToYUVchar(QImage image){
+std::tuple<unsigned char*,int> VideoCall::convertRGBImageToYUVchar(QImage image){
     unsigned short width = image.width();
     unsigned short height = image.height();
-    int y_len = width*height;
-    int uv_len = ((width+1)/2)*((height+1)/2);
+    int yLen = width*height;
+    int uvLen = ((width+1)/2)*((height+1)/2);
 
-    char* data= new char[4+y_len+2*uv_len];
+    unsigned char* data= new unsigned char[4+yLen+2*uvLen];
     data[0] = width >> 8;
     data[1] = width & 0xFF;
     data[2] = height >> 8;
@@ -66,26 +66,26 @@ char* VideoCall::convertRGBImageToYUVchar(QImage image){
             data[4+y*width+x]=(char)Y;
             if (x%2==0 && y%2==0)
             {
-                data[4+y_len+ y/2*((width+1)/2)+x/2]=(char)U;
-                data[4+y_len+uv_len+y/2*((width+1)/2)+x/2]=(char)V;
+                data[4+yLen+ y/2*((width+1)/2)+x/2]=(char)U;
+                data[4+yLen+uvLen+y/2*((width+1)/2)+x/2]=(char)V;
             }
     }
 
-    return data;
+    return {data,4+yLen+2*uvLen};
 }
-QImage VideoCall::convertYUVcharToRGBImage(char* data){
+QImage VideoCall::convertYUVcharToRGBImage(unsigned char* data,int length){
     unsigned short width = ((unsigned char)data[0]<<8) | (unsigned char)data[1];
     unsigned short height = ((unsigned char)data[2]<<8)|(unsigned char)data[3];
 
-    int y_len = width*height;
-    int uv_len = ((width+1)/2)*((height+1)/2);
+    int yLen = width*height;
+    int uvLen = ((width+1)/2)*((height+1)/2);
     char* imgbuf = new char[width*height*4];
     QImage image(width,height, QImage::Format_RGB32);
     for (int y = 0; y< height; y++)
     for (int x = 0; x< width; x++){
         unsigned char Y = (unsigned char) data[4+y*width+x];
-        unsigned char U = (unsigned char)data[4+y_len+ y/2*((width+1)/2)+x/2];
-        unsigned char V = (unsigned char) data[4+y_len+uv_len+y/2*((width+1)/2)+x/2];
+        unsigned char U = (unsigned char)data[4+yLen+ y/2*((width+1)/2)+x/2];
+        unsigned char V = (unsigned char) data[4+yLen+uvLen+y/2*((width+1)/2)+x/2];
         unsigned char R,G,B;
         convertYUVtoRGB(Y,U,V,R,G,B);
 
@@ -100,9 +100,9 @@ VideoCall::~VideoCall()
 {
     camera->stop();
     delete camera;
-    delete udp_service;
+    delete udpService;
 }
-VideoCall::VideoCall(QMainWindow *context, UdpService *udp_service, void (*onMyFrameListener)(QMainWindow *, QImage), void (*onPartnerFrameListener)(QMainWindow *, QImage))
+VideoCall::VideoCall(QMainWindow *context, UdpService *udpService, void (*onMyFrameListener)(QMainWindow *, QImage), void (*onPartnerFrameListener)(QMainWindow *, QImage))
 {
     QList<QCameraInfo> cameras = QCameraInfo::availableCameras();
     if (cameras.size() > 0)
@@ -120,13 +120,13 @@ VideoCall::VideoCall(QMainWindow *context, UdpService *udp_service, void (*onMyF
     {
         cout << "fail";
     }
-    MyVideoSurface *surface = new MyVideoSurface(context, camera, udp_service);
+    MyVideoSurface *surface = new MyVideoSurface(context, camera, udpService);
     surface->setOnMyFrameListener(this,&VideoCall::onNewFrame);
     camera->setViewfinder(surface);
     camera->start();
-    this->udp_service = udp_service;
+    this->udpService = udpService;
     this->onPartnerFrameListener = onPartnerFrameListener;
     this->context = context;
-    this->udp_service->setReceiveFrameListener(this, &VideoCall::onRetriveFrame);
+    this->udpService->setReceiveFrameListener(this, &VideoCall::onRetriveFrame);
     this->onMyFrameListener = onMyFrameListener;
 }

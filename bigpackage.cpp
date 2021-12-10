@@ -2,59 +2,68 @@
 #include <cstring>
 #include "bigpackage.h"
 #include "iostream"
+
 using namespace std;
 BigPackage::BigPackage()
 {
 }
-std::tuple<char *, int> BigPackage::getCharData()
+std::tuple<unsigned char*, int> BigPackage::getCharData()
 {
-    return {this->data, this->full_length};
+    return { this->data, this->dataLength };
 }
 BigPackage::~BigPackage()
 {
-    if (this->is_inited)
+    if (this->isAllocatedData)
         delete this->data;
 }
 
-BigPackage::BigPackage(int package_nums, int flag)
+BigPackage::BigPackage(unsigned char* firstPackage, int length)
 {
-
-    this->p_amount = package_nums;
-    this->data = new char[p_amount * BUFLEN + 1];
-    this->is_inited = true;
-    this->flag = flag;
-    this->full_length = 0;
+    int packageNums = (firstPackage[0] & 0x3f) | (firstPackage[1]);
+    this->packageNums = packageNums;
+    this->data = new unsigned char[packageNums * PACKAGESIZE];
+    for (int i = 2; i < length; i++) {
+        this->data[i - 2] = firstPackage[i];
+    }
+    this->isAllocatedData = true;
+    this->flag = BigPackage::getFlag(firstPackage);
+    this->dataLength = length - 2;
 }
 
 int BigPackage::getFullLength()
 {
-    return this->full_length;
+    return this->dataLength;
 }
 
-char BigPackage::getFlag(char *amount)
+unsigned char BigPackage::getFlag(unsigned char* amount)
 {
-    return amount[0];
+
+    return amount[0] >> 6;
 }
-BigPackage::BigPackage(char *data, int length, int flag)
+BigPackage::BigPackage(unsigned char* data, int length, int flag)
 {
 
     this->flag = flag;
     this->data = data;
-    this->full_length = length;
-    int data_len = BUFLEN - 1;
-    this->p_amount = length / data_len + (length % data_len == 0 ? 0 : 1);
-    this->is_inited = false;
+    this->dataLength = length;
+    this->packageNums = length / PACKAGESIZE + (length % PACKAGESIZE == 0 ? 0 : 1);
+    this->isAllocatedData = false;
+    this->lastLength = length % PACKAGESIZE == 0 ? PACKAGESIZE : length % PACKAGESIZE;
 }
-void BigPackage::pushPackage(char *buf, int length)
+
+void BigPackage::pushPackage(unsigned char* buf, int length)
 {
     if (BigPackage::getFlag(buf) != BigPackage::getPackageFlag(this->flag))
         return;
-    for (int i = 1; i < length; i++)
+    unsigned short index = (buf[0] & 0x3f) | (buf[1]);
+    for (int i = 2; i < length; i++)
     {
-        this->data[this->full_length] = buf[i];
-        this->full_length++;
+        this->data[index * PACKAGESIZE + i - 2] = buf[i];
     }
-    this->last_length = length-1;
+    if (index == this->packageNums - 1)
+        this->lastLength = length - 2;
+
+    dataLength += length - 2;
 }
 int BigPackage::getPackageFlag(int flag)
 {
@@ -65,51 +74,53 @@ int BigPackage::getPackageFlag(int flag)
     case BigPackage::SOUND:
         return SOUND_PACKAGE;
         break;
-
     default:
         return -1;
         break;
     }
     return -1;
 }
-std::tuple<char *, int> BigPackage::getPackage(int index)
+std::tuple<unsigned char*, int> BigPackage::getPackageToSend(int index)
 {
+    if (index != 0)
+        index = packageNums - index;
+    unsigned char byte1, byte2;
+    int packageLength;
+    if (index * PACKAGESIZE >= this->dataLength)
+    {
+        return { nullptr, 0 };
+    }
     if (index == 0)
     {
-        int package_amount = this->p_amount;
-        std::string tmp = std::to_string(package_amount);
-        char const *num_char = tmp.c_str();
-        char *buf = new char[BUFLEN];
+        byte1 = (this->flag << 6) | (packageNums & 0x3f >> 8);
+        byte2 = (packageNums & 0x00ff);
+        if (packageNums == 1) {
+            packageLength = this->lastLength + 2;
 
-        buf[0] = this->flag;
-        buf[1] = '\0';
-        strcat(buf, num_char);
-        buf[strlen(buf)] = '\0';
-        return {buf, strlen(buf)};
+        }
+        else packageLength = BUFLEN;
     }
-    index--;
-    if (index * (BUFLEN - 1) >= this->full_length)
+    else
     {
-        return {nullptr, 0};
+        int pFlag = getPackageFlag(this->flag);
+        byte1 = (pFlag << 6) | (packageNums & 0x3f >> 8);
+        byte2 = (index & 0x00ff);
+        if (index == packageNums - 1) {
+            packageLength = this->lastLength + 2;
+        }
+        else {
+            packageLength = BUFLEN;
+        }
     }
-    int data_len = BUFLEN - 1;
-    int begin = index * data_len;
-    int len = std::min((int)(this->full_length - index * data_len), (int)data_len);
+    unsigned char* res = new unsigned char[packageLength];
+    res[0] = byte1;
+    res[1] = byte2;
+    for (int i = 2; i < packageLength; i++)
+        res[i] = *(this->data + index * PACKAGESIZE + i - 2);
+    return { res, packageLength };
 
-    char *res = new char[len + 1];
-
-    res[0] = getPackageFlag(this->flag);
-    for (int i = 0; i < len; i++)
-        res[i + 1] = *(this->data + begin + i);
-    if (index == p_amount)
-    {
-        // last package
-        return {res, this->last_length + 1};
-    };
-
-    return {res, len + 1};
 }
 int BigPackage::getAmountPackageToSend()
 {
-    return this->p_amount + 1;
+    return this->packageNums;
 }

@@ -13,19 +13,19 @@ class VideoCall
 {
 private:
     QCamera *camera;
-    UdpService *udp_service;
+    UdpService *udpService;
     QMainWindow *context;
     void (*onPartnerFrameListener)(QMainWindow *, QImage);
-    static void onRetriveFrame(void *, char *, int);
+    static void onRetriveFrame(void *, unsigned char *, int);
     static void onNewFrame(void *, QImage);
-    char* convertRGBImageToYUVchar(QImage);
-    QImage convertYUVcharToRGBImage(char*);
+    std::tuple<unsigned char *, int> convertRGBImageToYUVchar(QImage);
+    QImage convertYUVcharToRGBImage(unsigned char*,int);
     void (*onMyFrameListener)(QMainWindow *, QImage);
 public:
     ~VideoCall();
-    void handleReceivedFrame(QImage);
+    void handleReceivedFrame(unsigned char*,int);
     void handleNewFrame(QImage);
-    VideoCall(QMainWindow *context, UdpService *udp_service, void (*)(QMainWindow *, QImage), void (*)(QMainWindow *, QImage));
+    VideoCall(QMainWindow *, UdpService *, void (*)(QMainWindow *, QImage), void (*)(QMainWindow *, QImage));
 };
 
 #endif // VIDEOCALL_H

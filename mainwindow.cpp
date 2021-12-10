@@ -4,16 +4,16 @@
 
 
 
-void MainWindow::onMyNewFrame(QMainWindow *main_window, QImage image)
+void MainWindow::onMyNewFrame(QMainWindow *mainWindow, QImage image)
 {
     QPixmap pm = QPixmap::fromImage(image);
-    MainWindow *context = (MainWindow *)main_window;
+    MainWindow *context = (MainWindow *)mainWindow;
     context->getUi()->label->setPixmap(pm.scaled(context->getUi()->label->size(), Qt::KeepAspectRatio, Qt::SmoothTransformation));
 }
-void MainWindow::onPartnerNewFrame(QMainWindow *main_window, QImage image)
+void MainWindow::onPartnerNewFrame(QMainWindow *mainWindow, QImage image)
 {
     QPixmap pm = QPixmap::fromImage(image);
-    MainWindow *context = (MainWindow *)main_window;
+    MainWindow *context = (MainWindow *)mainWindow;
     context->getUi()->partner_label->setPixmap(pm.scaled(context->getUi()->partner_label->size(), Qt::KeepAspectRatio, Qt::SmoothTransformation));
 }
 
@@ -23,15 +23,15 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent),
     ui->setupUi(this);
     setAcceptDrops(true);
 
-    udpservice = new UdpService();
-    audiocall = new AudioCall(this,udpservice);
-    videocall = new VideoCall(this,udpservice,onMyNewFrame,onPartnerNewFrame);
+    udpService = new UdpService();
+    audioCall = new AudioCall(this,udpService);
+    videoCall = new VideoCall(this,udpService,onMyNewFrame,onPartnerNewFrame);
 }
 
 MainWindow::~MainWindow()
 {
-    delete videocall;
-    delete udpservice;
+    delete videoCall;
+    delete udpService;
     delete ui;
 }
 
@@ -50,13 +50,13 @@ void MainWindow::on_startCallButton_clicked()
 
     if (n != 0)
     {
-        udpservice->setPartnerAddress("127.0.0.1", n);
+        udpService->setPartnerAddress("127.0.0.1", n);
     }
 
-    udpservice->start();
+    udpService->start();
 
-    int myport = udpservice->getMyPort();
-    ui->label_port->setText(QString("Your port is %1").arg(myport));
+    int myPort = udpService->getMyPort();
+    ui->label_port->setText(QString("Your port is %1").arg(myPort));
     ui->startCallButton->setEnabled(false);
     ui->stopCallButton->setEnabled(true);
 }
@@ -65,5 +65,5 @@ void MainWindow::on_stopCallButton_clicked()
     ui->label_port->setText(QString("Your port is 0"));
     ui->startCallButton->setEnabled(true);
     ui->stopCallButton->setEnabled(false);
-    this->udpservice->stop();
+    this->udpService->stop();
 }

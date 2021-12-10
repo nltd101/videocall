@@ -1,7 +1,7 @@
 #ifndef MYVIDEOSURFACE_H
 #define MYVIDEOSURFACE_H
 #ifndef WIDTH
-#define WIDTH 300
+#define WIDTH 200
 #endif
 #ifndef HEIGHT
 #define HEIGHT 300
