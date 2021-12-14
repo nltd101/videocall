@@ -11,21 +11,24 @@
 #include "debugmarco.h"
 class VideoCall
 {
-private:
-    QCamera *camera;
-    UdpService *udpService;
-    QMainWindow *context;
-    void (*onPartnerFrameListener)(QMainWindow *, QImage);
-    static void onRetriveFrame(void *, unsigned char *, int);
-    static void onNewFrame(void *, QImage);
-    std::tuple<unsigned char *, int> convertRGBImageToYUVchar(QImage);
-    QImage convertYUVcharToRGBImage(unsigned char*,int);
-    void (*onMyFrameListener)(QMainWindow *, QImage);
+
 public:
-    ~VideoCall();
-    void handleReceivedFrame(unsigned char*,int);
-    void handleNewFrame(QImage);
-    VideoCall(QMainWindow *, UdpService *, void (*)(QMainWindow *, QImage), void (*)(QMainWindow *, QImage));
+	~VideoCall();
+	VideoCall(QMainWindow *, UdpService *, void (*)(QMainWindow *, QImage), void (*)(QMainWindow *, QImage));
+
+	void handleReceivedFrame(unsigned char *, int);
+	void handleNewFrame(QImage);
+
+private:
+	QCamera *_camera;
+	UdpService *_udpService;
+	QMainWindow *_context;
+	void (*_onPartnerFrameListener)(QMainWindow *, QImage);
+	static void _onRetriveFrame(void *, unsigned char *, int);
+	static void _onNewFrame(void *, QImage);
+	std::tuple<unsigned char *, int> _convertRGBImageToYUVchar(QImage);
+	QImage _convertYUVcharToRGBImage(unsigned char *, int);
+	void (*_onMyFrameListener)(QMainWindow *, QImage);
 };
 
 #endif // VIDEOCALL_H

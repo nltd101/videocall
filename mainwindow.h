@@ -26,35 +26,29 @@ using namespace std;
 
 namespace Ui
 {
-  class MainWindow;
+	class MainWindow;
 }
 class VideoCall;
 class MainWindow : public QMainWindow
 {
-  Q_OBJECT
+	Q_OBJECT
 
 public:
-  explicit MainWindow(QWidget *parent = 0);
-  ~MainWindow();
-  Ui::MainWindow *getUi()
-  {
-    return this->ui;
-  }
+	explicit MainWindow(QWidget *parent = 0);
+	~MainWindow();
+	Ui::MainWindow *getUi();
 
 private slots:
-  void on_startCallButton_clicked();
-  void on_stopCallButton_clicked();
+	void on_startCallButton_clicked();
+	void on_stopCallButton_clicked();
 
 private:
-  void startAudioCall();
-  Ui::MainWindow *ui;
-  VideoCall *videoCall;
-  AudioCall * audioCall;
-  static void onMyNewFrame(QMainWindow *mainWindow, QImage image);
-  static void onPartnerNewFrame(QMainWindow *mainWindow, QImage image);
-
-
-  UdpService *udpService;
-
+	void _startAudioCall();
+	Ui::MainWindow *_ui;
+	VideoCall *_videoCall;
+	AudioCall *_audioCall;
+	static void _onMyNewFrame(QMainWindow *, QImage);
+	static void _onPartnerNewFrame(QMainWindow *, QImage);
+	UdpService *_udpService;
 };
 #endif // MAINWINDOW_H

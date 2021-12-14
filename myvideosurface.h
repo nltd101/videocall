@@ -1,10 +1,10 @@
 #ifndef MYVIDEOSURFACE_H
 #define MYVIDEOSURFACE_H
 #ifndef WIDTH
-#define WIDTH 200
+#define WIDTH 360
 #endif
 #ifndef HEIGHT
-#define HEIGHT 300
+#define HEIGHT 1000
 #endif
 
 #include <QImage>
@@ -26,30 +26,31 @@
 QT_BEGIN_NAMESPACE
 namespace Ui
 {
-    class MainWindow;
+	class MainWindow;
 }
 QT_END_NAMESPACE
 
 class MyVideoSurface : public QAbstractVideoSurface
 {
 
-    // Q_OBJECT
+	// Q_OBJECT
 private:
-    QCamera *camera;
-    UdpService *service;
-    void (*onNewFrame)(void *, QImage);
-    QMainWindow *context;
-    void convertRGBImageToYUVchar(QImage*, char*);
-    void convertYUVcharToRGBImage(char*,QImage*);
-    void* contextNewFrame;
+	QCamera *camera;
+	UdpService *service;
+	void (*onNewFrame)(void *, QImage);
+	QMainWindow *context;
+	void convertRGBImageToYUVchar(QImage *, char *);
+	void convertYUVcharToRGBImage(char *, QImage *);
+	void *contextNewFrame;
+
 public:
-    void setOnMyFrameListener(void*, void (*)(void *, QImage));
-    MyVideoSurface(QObject *parent, QCamera *camera, UdpService *service);
-    virtual ~MyVideoSurface();
+	void setOnMyFrameListener(void *, void (*)(void *, QImage));
+	MyVideoSurface(QObject *parent, QCamera *camera, UdpService *service);
+	virtual ~MyVideoSurface();
 
-    QList<QVideoFrame::PixelFormat>
-    supportedPixelFormats(QAbstractVideoBuffer::HandleType type) const;
+	QList<QVideoFrame::PixelFormat>
+	supportedPixelFormats(QAbstractVideoBuffer::HandleType type) const;
 
-    bool present(const QVideoFrame &frame);
+	bool present(const QVideoFrame &frame);
 };
 #endif // MYVIDEOSURFACE_H

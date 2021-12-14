@@ -13,21 +13,22 @@
 #include <QBuffer>
 class AudioCall
 {
-private:
-  UdpService *udpService;
-  QMainWindow *context;
-  QIODevice *inputDevice;
-  QIODevice *outputDevice;
-  QAudioInput *inputAudio;
-  QAudioOutput *outputAudio;
-private slots:
-  void handleStateChanged(QAudio::State newState);
-  static void onRetriveSound(void *parrent,unsigned char *data, int length);
-
 public:
-  ~AudioCall();
-  void sound(unsigned char *data, int length);
-  AudioCall(QMainWindow *, UdpService *);
+    AudioCall(QMainWindow *, UdpService *);
+    ~AudioCall();
+
+    void sound(unsigned char *, int);
+
+private:
+    UdpService *_udpService;
+    QMainWindow *_context;
+    QIODevice *_inputDevice;
+    QIODevice *_outputDevice;
+    QAudioInput *_inputAudio;
+    QAudioOutput *_outputAudio;
+private slots:
+    void handleStateChanged(QAudio::State);
+    static void onRetriveSound(void *, unsigned char *, int);
 };
 
 #endif // AUDIOCALL_H

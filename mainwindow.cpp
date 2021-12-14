@@ -1,69 +1,69 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
-
-
-
-void MainWindow::onMyNewFrame(QMainWindow *mainWindow, QImage image)
+void MainWindow::_onMyNewFrame(QMainWindow *mainWindow, QImage image)
 {
-    QPixmap pm = QPixmap::fromImage(image);
-    MainWindow *context = (MainWindow *)mainWindow;
-    context->getUi()->label->setPixmap(pm.scaled(context->getUi()->label->size(), Qt::KeepAspectRatio, Qt::SmoothTransformation));
+	QPixmap pm = QPixmap::fromImage(image);
+	MainWindow *context = (MainWindow *)mainWindow;
+	context->getUi()->label->setPixmap(pm.scaled(context->getUi()->label->size(), Qt::KeepAspectRatio, Qt::SmoothTransformation));
 }
-void MainWindow::onPartnerNewFrame(QMainWindow *mainWindow, QImage image)
+void MainWindow::_onPartnerNewFrame(QMainWindow *mainWindow, QImage image)
 {
-    QPixmap pm = QPixmap::fromImage(image);
-    MainWindow *context = (MainWindow *)mainWindow;
-    context->getUi()->partner_label->setPixmap(pm.scaled(context->getUi()->partner_label->size(), Qt::KeepAspectRatio, Qt::SmoothTransformation));
+	QPixmap pm = QPixmap::fromImage(image);
+	MainWindow *context = (MainWindow *)mainWindow;
+	context->getUi()->partner_label->setPixmap(pm.scaled(context->getUi()->partner_label->size(), Qt::KeepAspectRatio, Qt::SmoothTransformation));
 }
 
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent),
-                                          ui(new Ui::MainWindow)
+										  _ui(new Ui::MainWindow)
 {
-    ui->setupUi(this);
-    setAcceptDrops(true);
+	_ui->setupUi(this);
+	setAcceptDrops(true);
 
-    udpService = new UdpService();
-    audioCall = new AudioCall(this,udpService);
-    videoCall = new VideoCall(this,udpService,onMyNewFrame,onPartnerNewFrame);
+	_udpService = new UdpService();
+	_audioCall = new AudioCall(this, _udpService);
+	_videoCall = new VideoCall(this, _udpService, _onMyNewFrame, _onPartnerNewFrame);
 }
-
+Ui::MainWindow *MainWindow::getUi()
+{
+	return this->_ui;
+}
 MainWindow::~MainWindow()
 {
-    delete videoCall;
-    delete udpService;
-    delete ui;
+	delete _videoCall;
+	delete _udpService;
+	delete _ui;
 }
 
 void MainWindow::on_startCallButton_clicked()
 {
-    QString port = ui->portEditText->toPlainText();
+	QString port = _ui->portEditText->toPlainText();
 
-    if (port.length() == 0)
-    {
-        QMessageBox messageBox;
-        messageBox.critical(0, "Error", "Please input the valid port");
-        messageBox.setFixedSize(500, 200);
-        return;
-    }
-    int n = port.toInt();
+	if (port.length() == 0)
+	{
+		QMessageBox messageBox;
+		messageBox.critical(0, "Error", "Please input the valid port");
+		messageBox.setFixedSize(500, 200);
+		return;
+	}
+	int n = port.toInt();
 
-    if (n != 0)
-    {
-        udpService->setPartnerAddress("127.0.0.1", n);
-    }
+	if (n != 0)
+	{
+		_udpService->setPartnerAddress("127.0.0.1", n);
+	}
 
-    udpService->start();
+	_udpService->start();
 
-    int myPort = udpService->getMyPort();
-    ui->label_port->setText(QString("Your port is %1").arg(myPort));
-    ui->startCallButton->setEnabled(false);
-    ui->stopCallButton->setEnabled(true);
+	int myPort = _udpService->getMyPort();
+	_ui->label_port->setText(QString("Your port is %1").arg(myPort));
+	_ui->startCallButton->setEnabled(false);
+	_ui->stopCallButton->setEnabled(true);
 }
 void MainWindow::on_stopCallButton_clicked()
 {
-    ui->label_port->setText(QString("Your port is 0"));
-    ui->startCallButton->setEnabled(true);
-    ui->stopCallButton->setEnabled(false);
-    this->udpService->stop();
+	_ui->label_port->setText(QString("Your port is 0"));
+	_ui->startCallButton->setEnabled(true);
+	_ui->stopCallButton->setEnabled(false);
+	_udpService->stop();
 }
