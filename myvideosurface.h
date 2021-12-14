@@ -33,24 +33,20 @@ QT_END_NAMESPACE
 class MyVideoSurface : public QAbstractVideoSurface
 {
 
-	// Q_OBJECT
-private:
-	QCamera *camera;
-	UdpService *service;
-	void (*onNewFrame)(void *, QImage);
-	QMainWindow *context;
-	void convertRGBImageToYUVchar(QImage *, char *);
-	void convertYUVcharToRGBImage(char *, QImage *);
-	void *contextNewFrame;
-
 public:
-	void setOnMyFrameListener(void *, void (*)(void *, QImage));
 	MyVideoSurface(QObject *parent, QCamera *camera, UdpService *service);
 	virtual ~MyVideoSurface();
 
 	QList<QVideoFrame::PixelFormat>
 	supportedPixelFormats(QAbstractVideoBuffer::HandleType type) const;
-
 	bool present(const QVideoFrame &frame);
+	void setOnMyFrameListener(void *, void (*)(void *, QImage));
+
+private:
+	void (*_onNewFrame)(void *, QImage);
+	QCamera *_camera;
+	UdpService *_service;
+	QMainWindow *_context;
+	void *_contextNewFrame;
 };
 #endif // MYVIDEOSURFACE_H

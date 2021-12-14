@@ -29,7 +29,6 @@ public:
 	int getMyPort();
 	void start();
 	void stop();
-
 	void setReceiveFrameListener(void *, void (*onReceiveFrame)(void *parent, unsigned char *data, int));
 	void setReceiveSoundListener(void *, void (*onReceiveSound)(void *parent, unsigned char *data, int));
 	void sendFrame(unsigned char *data, int);
@@ -39,6 +38,7 @@ private:
 	void _openPortAndListen();
 	void _sendData(unsigned char *data, int, int flag);
 	void _startTimer();
+
 	void (*_onReceiveFrame)(void *parent, unsigned char *data, int length);
 	void (*_onReceiveSound)(void *parent, unsigned char *data, int length);
 	int _bytePerS;

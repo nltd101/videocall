@@ -7,9 +7,9 @@ using namespace std;
 MyVideoSurface::MyVideoSurface(QObject *parent, QCamera *camera, UdpService *service) : QAbstractVideoSurface(parent)
 {
 
-	this->service = service;
-	this->camera = camera;
-	this->context = (QMainWindow *)parent;
+    _service = service;
+    _camera = camera;
+    _context = (QMainWindow *)parent;
 }
 
 MyVideoSurface::~MyVideoSurface()
@@ -30,8 +30,8 @@ QList<QVideoFrame::PixelFormat> MyVideoSurface::supportedPixelFormats(QAbstractV
 }
 void MyVideoSurface::setOnMyFrameListener(void *context, void (*onNewFrame)(void *, QImage))
 {
-	this->contextNewFrame = context;
-	this->onNewFrame = onNewFrame;
+    _contextNewFrame = context;
+    _onNewFrame = onNewFrame;
 }
 
 bool MyVideoSurface::present(const QVideoFrame &frame)
@@ -51,8 +51,8 @@ bool MyVideoSurface::present(const QVideoFrame &frame)
 		cloneFrame.unmap();
 		cp = cp.mirrored(true, false);
 
-		if (this->onNewFrame)
-			this->onNewFrame(this->contextNewFrame, cp);
+        if (_onNewFrame)
+            _onNewFrame(_contextNewFrame, cp);
 		//        delete q;
 
 		return true;

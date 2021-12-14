@@ -20,14 +20,15 @@ public:
 	void handleNewFrame(QImage);
 
 private:
+    static void _onRetriveFrame(void *, unsigned char *, int);
+    static void _onNewFrame(void *, QImage);
+    std::tuple<unsigned char *, int> _convertRGBImageToYUVchar(QImage);
+    QImage _convertYUVcharToRGBImage(unsigned char *, int);
+
 	QCamera *_camera;
 	UdpService *_udpService;
 	QMainWindow *_context;
 	void (*_onPartnerFrameListener)(QMainWindow *, QImage);
-	static void _onRetriveFrame(void *, unsigned char *, int);
-	static void _onNewFrame(void *, QImage);
-	std::tuple<unsigned char *, int> _convertRGBImageToYUVchar(QImage);
-	QImage _convertYUVcharToRGBImage(unsigned char *, int);
 	void (*_onMyFrameListener)(QMainWindow *, QImage);
 };
 
