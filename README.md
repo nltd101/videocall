@@ -7,13 +7,13 @@
 - Using UDP protocol with customized stack to make the video call more stable
 ## Tech
 
-Dillinger uses a number of open source projects to work properly:
+Video Call uses a number of open source projects to work properly:
 
 - [C++] - The project is only contain C++
 
 ## Installation
 
-Dillinger requires [QT](https://www.qt.io/download) to run.
+Video Call requires [QT](https://www.qt.io/download) to run.
 
 
 ## How to build release
