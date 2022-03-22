@@ -26,7 +26,6 @@ chmod +x ./build_release.sh
 
 Want to contribute? Great!
 
-Dillinger uses Gulp + Webpack for fast developing.
 Make a change in your file and instantaneously see your updates!
 
 Open the project with QT platform and enjoy the moment.
